@@ -47,7 +47,7 @@ class Knapsack(object):
         # xi-xi terms
         self.qubo = {('x' + str(k), 'x' + str(k)): A * (weights[k] ** 2) - costs[k] for k in range(x_size)}
         # xi-xj terms
-        self.qubo_xi_xj += {('x' + str(i), 'x' + str(j)): 2 * A * weights[i] * weights[j] for i in range(x_size) for j in range(i + 1, x_size)}
+        self.qubo_xi_xj = {('x' + str(i), 'x' + str(j)): 2 * A * weights[i] * weights[j] for i in range(x_size) for j in range(i + 1, x_size)}
         # merge QUBO
         self.qubo.update(self.qubo_xi_xj)
 
