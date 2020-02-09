@@ -16,7 +16,7 @@ A simple command that runs the demo. For example,
 
 .. code-block:: bash
 
-  python <demo_name>.py
+  python main.py <input file name> <maximum_weight_in_knapsack>
 
 
 Code Overview
