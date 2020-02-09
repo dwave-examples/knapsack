@@ -1,3 +1,18 @@
+# Copyright 2020 D-Wave Systems, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# ------ Import necessary packages ------
 from math import log
 from collections import defaultdict
 import dimod
@@ -24,6 +39,7 @@ class Knapsack(object):
         logw = int(log(W)) + 1
         m = logw - 1
 
+        # y list for Lucas's algorithm
         x_size = len(costs)
         y = [2 ** n for n in range(m)]
         y.append(W + 1 - (2 ** m))
@@ -31,7 +47,7 @@ class Knapsack(object):
         # xi-xi terms
         self.qubo = {('x' + str(k), 'x' + str(k)): A * (weights[k] ** 2) - costs[k] for k in range(x_size)}
         # xi-xj terms
-        self.qubo_xi_xj = {('x' + str(i), 'x' + str(j)): 2 * A * weights[i] * weights[j] for i in range(x_size) for j in range(i + 1, x_size)}
+        self.qubo_xi_xj += {('x' + str(i), 'x' + str(j)): 2 * A * weights[i] * weights[j] for i in range(x_size) for j in range(i + 1, x_size)}
         # merge QUBO
         self.qubo.update(self.qubo_xi_xj)
 
