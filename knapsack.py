@@ -52,16 +52,14 @@ class Knapsack(object):
         self.qubo.update(self.qubo_xi_xj)
 
         # y-y terms
-        for k in range(logw):
-            self.qubo[('y' + str(k), 'y' + str(k))] = A * (y[k] ** 2)
-        for i in range(logw):
-            for j in range(i + 1, logw):
-                self.qubo[('y' + str(i), 'y' + str(j))] = 2 * A * y[i] * y[j]
+        self.qubo_yk_yk = {('y' + str(k), 'y' + str(k)): A * (y[k] ** 2) for k in range(logw)}
+        self.qubo.update(self.qubo_yk_yk)
+        self.qubo_yi_yj = {('y' + str(i), 'y' + str(j)): 2 * A * y[i] * y[j] for i in range(logw) for j in range(i + 1, logw)}
+        self.qubo.update(self.qubo_yi_yj)
 
         # x-y terms
-        for i in range(x_size):
-            for j in range(logw):
-                self.qubo[('x' + str(i), 'y' + str(j))] = -2 * A * weights[i] * y[j]
+        self.qubo_xi_yj = {('x' + str(i), 'y' + str(j)): -2 * A * weights[i] * y[j] for i in range(x_size) for j in range(logw)}
+        self.qubo.update(self.qubo_xi_yj)
 
     def get_bqm(self):
         return dimod.BinaryQuadraticModel.from_qubo(self.qubo)
