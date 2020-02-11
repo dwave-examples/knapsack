@@ -7,12 +7,12 @@ Consider a set of objects, for example:
 
 .. code-block:: bash
 
-95_kg,77,95
-70_kg,44,70
-85_kg,15,85
-31_kg,67,31
-100_kg,75,100
-...
+  95_kg,77,95
+  70_kg,44,70
+  85_kg,15,85
+  31_kg,67,31
+  100_kg,75,100
+  ...
 
 The first column is the name of the object; the second column is a value that
 is associated with the object; and the third column is the weight of the object.
@@ -30,13 +30,13 @@ To run a small demo, consider the following objects:
 
 .. code-block:: bash
 
-12_kg,35,12
-27_kg,85,27
-10_kg,30,10
-17_kg,50,17
-20_kg,70,20
-10_kg,80,10
-15_kg,55,15
+  12_kg,35,12
+  27_kg,85,27
+  10_kg,30,10
+  17_kg,50,17
+  20_kg,70,20
+  10_kg,80,10
+  15_kg,55,15
 
 Run the command:
 
