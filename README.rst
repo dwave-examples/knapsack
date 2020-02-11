@@ -5,6 +5,8 @@ Knapsack
 This code runs the knapsack problem.
 Consider a set of objects, for example:
 
+.. code-block:: bash
+
 95_kg,77,95
 70_kg,44,70
 85_kg,15,85
@@ -25,6 +27,8 @@ Usage
 -----
 
 To run a small demo, consider the following objects:
+
+.. code-block:: bash
 
 12_kg,35,12
 27_kg,85,27
