@@ -18,8 +18,8 @@ The first column is the name of the object; the second column is a value that
 is associated with the object; and the third column is the weight of the object.
 Consider a knapsack, which has a maximum weight W. The goal of the knapsack
 problem is to pack objects into the knapsack to do the following:
-- maximize the sum total of the values of the objects put into the knapsack
-- fill up the knapsack so that the total weight is less than or equal to W
+1) maximize the sum total of the values of the objects put into the knapsack
+2) fill up the knapsack so that the total weight is less than or equal to W.
 
 The knapsack problem is well-known optimization problem. To solve on a D-Wave system, we can reformulate this problem as a quadratic unconstrained binary optimization problem (QUBO).
 
