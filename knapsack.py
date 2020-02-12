@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # ------ Import necessary packages ------
-from math import log
+from math import log, ceil
 from collections import defaultdict
 import dimod
 
@@ -24,42 +24,57 @@ import dimod
 
 class Knapsack(object):
 
-    def __init__(self, names, costs, weights, W):
+    def __init__(self, names, costs, weights, Weight_Capacity):
 
         self.names = names
         self.costs = costs
 
-        # Initialize QUBO matrix
+        # Initialize QUBO dict
         self.qubo = defaultdict(float)
 
         # Lagrangian multiplier
-        A = max(costs)
+        Lagrange = max(costs)
 
-        # Lucas parameters
-        logw = int(log(W)) + 1
-        m = logw - 1
-
-        # y list for Lucas's algorithm
+        # Number of objects
         x_size = len(costs)
-        y = [2 ** n for n in range(m)]
-        y.append(W + 1 - (2 ** m))
 
-        # xi-xi terms
-        self.qubo = {('x' + str(k), 'x' + str(k)): A * (weights[k] ** 2) - costs[k] for k in range(x_size)}
-        # xi-xj terms
-        self.qubo_xi_xj = {('x' + str(i), 'x' + str(j)): 2 * A * weights[i] * weights[j] for i in range(x_size) for j in range(i + 1, x_size)}
-        # merge QUBO
-        self.qubo.update(self.qubo_xi_xj)
+        # Lucas's algorithm introduces additional slack variables to handle
+        # the inequality. max_y_index indicates the maximum index in the y
+        # sum; hence the number of slack variables.
+        max_y_index = ceil(log(Weight_Capacity))
 
-        # y-y terms
-        self.qubo_yk_yk = {('y' + str(k), 'y' + str(k)): A * (y[k] ** 2) for k in range(logw)}
-        self.qubo.update(self.qubo_yk_yk)
-        self.qubo_yi_yj = {('y' + str(i), 'y' + str(j)): 2 * A * y[i] * y[j] for i in range(logw) for j in range(i + 1, logw)}
-        self.qubo.update(self.qubo_yi_yj)
+        # Slack variable list for Lucas's algorithm. The last variable has
+        # a special value because it terminates the sequence.
+        y = [2 ** n for n in range(max_y_index - 1)]
+        y.append(Weight_Capacity + 1 - 2 ** (max_y_index - 1))
 
-        # x-y terms
-        self.qubo_xi_yj = {('x' + str(i), 'y' + str(j)): -2 * A * weights[i] * y[j] for i in range(x_size) for j in range(logw)}
-        self.qubo.update(self.qubo_xi_yj)
+        # Hamiltonian xi-xi terms
+        for k in range(x_size):
+            key = ('x' + str(k), 'x' + str(k))
+            self.qubo[key] = Lagrange * (weights[k] ** 2) - costs[k]
+
+        # Hamiltonian xi-xj terms
+        for i in range(x_size):
+            for j in range(i + 1, x_size):
+                key = ('x' + str(i), 'x' + str(j))
+                self.qubo[key] = 2 * Lagrange * weights[i] * weights[j]
+
+        # Hamiltonian y-y terms
+        for k in range(max_y_index):
+            key = ('y' + str(k), 'y' + str(k))
+            self.qubo[key] = Lagrange * (y[k] ** 2)
+
+        # Hamiltonian yi-yj terms
+        for i in range(max_y_index):
+            for j in range(i + 1, max_y_index):
+                key = ('y' + str(i), 'y' + str(j))
+                self.qubo[key] = 2 * Lagrange * y[i] * y[j]
+
+        # Hamiltonian x-y terms
+        for i in range(x_size):
+            for j in range(max_y_index):
+                key = ('x' + str(i), 'y' + str(j))
+                self.qubo[key] = -2 * Lagrange * weights[i] * y[j]
 
     def get_bqm(self):
         return dimod.BinaryQuadraticModel.from_qubo(self.qubo)
