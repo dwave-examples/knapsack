@@ -40,15 +40,17 @@ except ValueError:
 
 # parse input data
 df = pd.read_csv(data_file_name, header=None)
-df.columns = ['name', 'cost', 'weight']
+df.columns = ['cost', 'weight']
 
 # create the Knapsack object
-K = Knapsack(df['name'], df['cost'], df['weight'], Weight_Capacity)
+K = Knapsack(df['cost'], df['weight'], Weight_Capacity)
 
 # Obtain the knapsack BQM
 bqm = K.get_bqm()
 
 sampler = LeapHybridSampler(profile="hss")
 sampleset = sampler.sample(bqm, time_limit=10)  # doctest: +SKIP
+#print("Found solution {} at energy {}.".format(
+#   K.get_names(sampleset.record.sample[0]), sampleset.first.energy))
 print("Found solution {} at energy {}.".format(
-   K.get_names(sampleset.record.sample[0]), sampleset.first.energy))
+   [df['weight'][i] for i in range(len(df['weight'])) if sampleset.record.sample[0][i] == 1.], sampleset.first.energy))

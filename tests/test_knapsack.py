@@ -34,7 +34,7 @@ class TestSmoke(unittest.TestCase):
         # Extract the list from the solution
         z = str(value).split(" at energy")
         soln = z[0].split("Found solution ")
-        soln_expected = ['20_kg', '10_kg', '15_kg']
+        soln_expected = [20, 10, 15]
         self.assertEqual(eval(soln[1]), soln_expected)
 
 if __name__ == '__main__':

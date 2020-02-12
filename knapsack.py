@@ -24,9 +24,8 @@ import dimod
 
 class Knapsack(object):
 
-    def __init__(self, names, costs, weights, Weight_Capacity):
+    def __init__(self, costs, weights, Weight_Capacity):
 
-        self.names = names
         self.costs = costs
 
         # Initialize QUBO dict
@@ -78,6 +77,3 @@ class Knapsack(object):
 
     def get_bqm(self):
         return dimod.BinaryQuadraticModel.from_qubo(self.qubo)
-
-    def get_names(self, solution):
-        return [self.names[i] for i in range(len(self.costs)) if solution[i] == 1.]
