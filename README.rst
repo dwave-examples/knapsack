@@ -2,63 +2,38 @@
 Knapsack
 ========
 
-This code runs the knapsack problem.
-Consider a set of objects, for example:
+This code runs the knapsack problem. The knapsack problem is well-known optimization problem, for example found in packing shipping containers on docks. To solve on a D-Wave system, we reformulate this problem as a quadratic unconstrained binary optimization problem (QUBO).
 
-.. code-block:: bash
-
-  95_kg,77,95
-  70_kg,44,70
-  85_kg,15,85
-  31_kg,67,31
-  100_kg,75,100
-  ...
-
-The first column is the name of the object; the second column is a value that
-is associated with the object; and the third column is the weight of the object.
-Consider a knapsack, which has a maximum weight W. The goal of the knapsack
-problem is to pack objects into the knapsack to do the following:
+The knapsack problem presents a collection of objects. Each object has a value, and a weight. The knapsack has a weight capacity which it can hold. The goal is to pack the knapsack in order to:
 1) maximize the sum total of the values of the objects put into the knapsack
-2) fill up the knapsack so that the total weight is less than or equal to W.
-
-The knapsack problem is well-known optimization problem. To solve on a D-Wave system, we can reformulate this problem as a quadratic unconstrained binary optimization problem (QUBO).
+2) fill up the knapsack so that the total weight is less than or equal to the knapsack's capacity.
 
 Usage
 -----
 
-To run a small demo, consider the following objects:
-
-.. code-block:: bash
-
-  12_kg,35,12
-  27_kg,85,27
-  10_kg,30,10
-  17_kg,50,17
-  20_kg,70,20
-  10_kg,80,10
-  15_kg,55,15
-
-Run the command:
+To run a small demo, run the command:
 
 .. code-block:: bash
 
   python main.py small_data.txt 50
 
-The answer should include the last three object. Their combined weight is
-45 kg, below the maximum of 50 kg. Their value is 205, which agrees with the
+The answer should include three objects, with combined weight of 45 kg, below 
+the maximum of 50 kg. Their summed value is 205, which agrees with the
 reported energy.
 
-To run the demo, run:
+To run the full demo, run the command:
 
 .. code-block:: bash
 
-  python main.py data.txt 150
+  python main.py data.txt 70
 
 
 Code Overview
 -------------
 
-knapsack.py contains an implementation of Andrew Lucas's improved formulation[2] based on his original writeup[1].
+knapsack.py contains an implementation of Andrew Lucas's improved formulation[2] based on his original writeup[1]. Lucas's formulation adds slack variables to handle the less-than-or-equal-to constraint.
+
+The x variables determine whether the weights are to be included in the selected set, and the y variables are the slack variables. The code separates out the x-x, x-y, and y-y terms.
 
 
 References
