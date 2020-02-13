@@ -33,7 +33,7 @@ except IOError:
     exit(1)
 
 try:
-    Weight_Capacity = float(sys.argv[2])
+    weight_capacity = float(sys.argv[2])
 except ValueError:
     print("Usage: knapsack.py: <data file> <maximum weight>")
     exit(1)
@@ -43,14 +43,12 @@ df = pd.read_csv(data_file_name, header=None)
 df.columns = ['cost', 'weight']
 
 # create the Knapsack object
-K = Knapsack(df['cost'], df['weight'], Weight_Capacity)
+knapsack = Knapsack(df['cost'], df['weight'], weight_capacity)
 
 # Obtain the knapsack BQM
-bqm = K.get_bqm()
+bqm = knapsack.get_bqm()
 
 sampler = LeapHybridSampler(profile="hss")
 sampleset = sampler.sample(bqm, time_limit=10)  # doctest: +SKIP
-#print("Found solution {} at energy {}.".format(
-#   K.get_names(sampleset.record.sample[0]), sampleset.first.energy))
 print("Found solution {} at energy {}.".format(
    [df['weight'][i] for i in range(len(df['weight'])) if sampleset.record.sample[0][i] == 1.], sampleset.first.energy))

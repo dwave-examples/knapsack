@@ -24,7 +24,7 @@ import dimod
 
 class Knapsack(object):
 
-    def __init__(self, costs, weights, Weight_Capacity):
+    def __init__(self, costs, weights, weight_capacity):
 
         self.costs = costs
 
@@ -32,7 +32,7 @@ class Knapsack(object):
         self.qubo = defaultdict(float)
 
         # Lagrangian multiplier
-        Lagrange = max(costs)
+        lagrange = max(costs)
 
         # Number of objects
         x_size = len(costs)
@@ -40,40 +40,40 @@ class Knapsack(object):
         # Lucas's algorithm introduces additional slack variables to handle
         # the inequality. max_y_index indicates the maximum index in the y
         # sum; hence the number of slack variables.
-        max_y_index = ceil(log(Weight_Capacity))
+        max_y_index = ceil(log(weight_capacity))
 
         # Slack variable list for Lucas's algorithm. The last variable has
         # a special value because it terminates the sequence.
         y = [2 ** n for n in range(max_y_index - 1)]
-        y.append(Weight_Capacity + 1 - 2 ** (max_y_index - 1))
+        y.append(weight_capacity + 1 - 2 ** (max_y_index - 1))
 
         # Hamiltonian xi-xi terms
         for k in range(x_size):
             key = ('x' + str(k), 'x' + str(k))
-            self.qubo[key] = Lagrange * (weights[k] ** 2) - costs[k]
+            self.qubo[key] = lagrange * (weights[k] ** 2) - costs[k]
 
         # Hamiltonian xi-xj terms
         for i in range(x_size):
             for j in range(i + 1, x_size):
                 key = ('x' + str(i), 'x' + str(j))
-                self.qubo[key] = 2 * Lagrange * weights[i] * weights[j]
+                self.qubo[key] = 2 * lagrange * weights[i] * weights[j]
 
         # Hamiltonian y-y terms
         for k in range(max_y_index):
             key = ('y' + str(k), 'y' + str(k))
-            self.qubo[key] = Lagrange * (y[k] ** 2)
+            self.qubo[key] = lagrange * (y[k] ** 2)
 
         # Hamiltonian yi-yj terms
         for i in range(max_y_index):
             for j in range(i + 1, max_y_index):
                 key = ('y' + str(i), 'y' + str(j))
-                self.qubo[key] = 2 * Lagrange * y[i] * y[j]
+                self.qubo[key] = 2 * lagrange * y[i] * y[j]
 
         # Hamiltonian x-y terms
         for i in range(x_size):
             for j in range(max_y_index):
                 key = ('x' + str(i), 'y' + str(j))
-                self.qubo[key] = -2 * Lagrange * weights[i] * y[j]
+                self.qubo[key] = -2 * lagrange * weights[i] * y[j]
 
     def get_bqm(self):
         return dimod.BinaryQuadraticModel.from_qubo(self.qubo)
