@@ -21,8 +21,7 @@ from dwave.system import LeapHybridSampler
 # check that the user has provided data file name, and maximum weight
 # which the knapsack can hold
 if len(sys.argv) != 3:
-    print("Usage: knapsack.py: <data file> <maximum weight>")
-    exit(1)
+    raise TypeError("Incorrect number of arguments")
 
 data_file_name = sys.argv[1]
 try:
@@ -50,5 +49,6 @@ bqm = knapsack.get_bqm()
 
 sampler = LeapHybridSampler(profile="hss")
 sampleset = sampler.sample(bqm, time_limit=10)  # doctest: +SKIP
-print("Found solution {} at energy {}.".format(
-   [df['weight'][i] for i in range(len(df['weight'])) if sampleset.record.sample[0][i] == 1.], sampleset.first.energy))
+solution = [df['weight'][i] for i in range(len(df['weight'])) if sampleset.record.sample[0][i] == 1.]
+
+print("Found solution {} at energy {}.".format(solution, sampleset.first.energy))
