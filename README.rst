@@ -2,11 +2,12 @@
 Knapsack
 ========
 
-This code runs the knapsack problem. The knapsack problem is well-known optimization problem, for example found in packing shipping containers on docks. To solve on a D-Wave system, we reformulate this problem as a quadratic unconstrained binary optimization problem (QUBO).
+Consider a problem found in packing shipping containers on docks. One has a collection of objects; each object has a value, and a weight. The shipping container has a weight capacity which it can hold. The goal is to pack the shipping container in order to:
+1) maximize the sum total of the values of the objects put into the container
+2) fill up the container so that the total weight is less than or equal to the container's capacity.
 
-The knapsack problem presents a collection of objects. Each object has a value, and a weight. The knapsack has a weight capacity which it can hold. The goal is to pack the knapsack in order to:
-1) maximize the sum total of the values of the objects put into the knapsack
-2) fill up the knapsack so that the total weight is less than or equal to the knapsack's capacity.
+This problem is known as the knapsack problem. The knapsack problem is well-known optimization problem, To solve on a D-Wave system, we reformulate this problem as a quadratic unconstrained binary optimization problem (QUBO).
+
 
 Usage
 -----
@@ -33,8 +34,13 @@ Code Overview
 
 knapsack.py contains an implementation of Andrew Lucas's improved formulation[2] based on his original writeup[1]. Lucas's formulation adds slack variables to handle the less-than-or-equal-to constraint.
 
-The x variables determine whether the weights are to be included in the selected set, and the y variables are the slack variables. The code separates out the x-x, x-y, and y-y terms.
+The x variables determine whether the weights are to be included in the selected set, and the y variables are the slack variables. 
+The code separates out the x-x, x-y, and y-y terms.
 
+The Hamiltonian includes the constraints that the sum of the y variables must
+be 1; the weight of the knapsack can take only one value. There is also the 
+constraint that the sum of all the weights multiplied by the x variables must
+be less than or equal to the knapsack's weight capacity. The energy term multiplies the costs by the x variables, in order to represent the overall weight placed into the knapsack. The slack variables turn the inequality into an equality.
 
 References
 ----------
