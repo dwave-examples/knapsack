@@ -26,7 +26,7 @@ To run the full demo, run the command:
 
 .. code-block:: bash
 
-  python main.py data.txt 70
+  python main.py
 
 
 Code Overview
