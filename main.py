@@ -75,24 +75,8 @@ def knapsack_bqm(costs, weights, weight_capacity):
     return bqm
 
 
-# check that the user has provided data file name, and maximum weight
-# which the knapsack can hold
-if len(sys.argv) != 3:
-    raise TypeError("Incorrect number of arguments")
-
-data_file_name = sys.argv[1]
-try:
-    with open(data_file_name, "r") as myfile:
-        input_data = myfile.readlines()
-except IOError:
-    print("knapsack.py: data file <" + data_file_name + "> missing")
-    exit(1)
-
-try:
-    weight_capacity = float(sys.argv[2])
-except ValueError:
-    print("Usage: knapsack.py: <data file> <maximum weight>")
-    exit(1)
+data_file_name = sys.argv[1] if len(sys.argv) > 1 else "data.txt"
+weight_capacity = float(sys.argv[2]) if len(sys.argv) > 2 else 70
 
 # parse input data
 df = pd.read_csv(data_file_name, header=None)
