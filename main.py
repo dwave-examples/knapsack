@@ -16,7 +16,6 @@ import pandas as pd
 import sys
 from dwave.system import LeapHybridSampler
 from math import log, ceil
-from collections import defaultdict
 import dimod
 
 # From Andrew Lucas, NP-hard combinatorial problems as Ising spin glasses
@@ -24,12 +23,12 @@ import dimod
 # based on Lucas, Frontiers in Physics _2, 5 (2014)
 
 
-def knapsack_qubo(costs, weights, weight_capacity):
+def knapsack_bqm(costs, weights, weight_capacity):
 
     costs = costs
 
-    # Initialize QUBO dict
-    qubo = defaultdict(float)
+    # Initialize BQM
+    bqm = dimod.AdjVectorBQM(dimod.Vartype.BINARY)
 
     # Lagrangian multiplier
     lagrange = max(costs)
@@ -49,33 +48,31 @@ def knapsack_qubo(costs, weights, weight_capacity):
 
     # Hamiltonian xi-xi terms
     for k in range(x_size):
-        key = ('x' + str(k), 'x' + str(k))
-        qubo[key] = lagrange * (weights[k] ** 2) - costs[k]
+        bqm.set_linear('x' + str(k), lagrange * (weights[k] ** 2) - costs[k])
 
     # Hamiltonian xi-xj terms
     for i in range(x_size):
         for j in range(i + 1, x_size):
             key = ('x' + str(i), 'x' + str(j))
-            qubo[key] = 2 * lagrange * weights[i] * weights[j]
+            bqm.quadratic[key] = 2 * lagrange * weights[i] * weights[j]
 
     # Hamiltonian y-y terms
     for k in range(max_y_index):
-        key = ('y' + str(k), 'y' + str(k))
-        qubo[key] = lagrange * (y[k] ** 2)
+        bqm.set_linear('y' + str(k), lagrange * (y[k] ** 2))
 
     # Hamiltonian yi-yj terms
     for i in range(max_y_index):
         for j in range(i + 1, max_y_index):
             key = ('y' + str(i), 'y' + str(j))
-            qubo[key] = 2 * lagrange * y[i] * y[j]
+            bqm.quadratic[key] = 2 * lagrange * y[i] * y[j]
 
     # Hamiltonian x-y terms
     for i in range(x_size):
         for j in range(max_y_index):
             key = ('x' + str(i), 'y' + str(j))
-            qubo[key] = -2 * lagrange * weights[i] * y[j]
+            bqm.quadratic[key] = -2 * lagrange * weights[i] * y[j]
 
-    return qubo
+    return bqm
 
 
 # check that the user has provided data file name, and maximum weight
@@ -101,9 +98,7 @@ except ValueError:
 df = pd.read_csv(data_file_name, header=None)
 df.columns = ['cost', 'weight']
 
-qubo = knapsack_qubo(df['cost'], df['weight'], weight_capacity)
-
-bqm = dimod.BinaryQuadraticModel.from_qubo(qubo)
+bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
 
 sampler = LeapHybridSampler(profile="alpha")
 sampleset = sampler.sample(bqm, time_limit=10)  # doctest: +SKIP
