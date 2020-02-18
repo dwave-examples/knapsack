@@ -12,11 +12,71 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ------ Import necessary packages ------
 import pandas as pd
 import sys
-from knapsack import Knapsack
 from dwave.system import LeapHybridSampler
+from math import log, ceil
+from collections import defaultdict
+import dimod
+
+# From Andrew Lucas, NP-hard combinatorial problems as Ising spin glasses
+# Workshop on Classical and Quantum Optimization; ETH Zuerich - August 20, 2014
+# based on Lucas, Frontiers in Physics _2, 5 (2014)
+
+
+def knapsack_qubo(costs, weights, weight_capacity):
+
+    costs = costs
+
+    # Initialize QUBO dict
+    qubo = defaultdict(float)
+
+    # Lagrangian multiplier
+    lagrange = max(costs)
+
+    # Number of objects
+    x_size = len(costs)
+
+    # Lucas's algorithm introduces additional slack variables to handle
+    # the inequality. max_y_index indicates the maximum index in the y
+    # sum; hence the number of slack variables.
+    max_y_index = ceil(log(weight_capacity))
+
+    # Slack variable list for Lucas's algorithm. The last variable has
+    # a special value because it terminates the sequence.
+    y = [2 ** n for n in range(max_y_index - 1)]
+    y.append(weight_capacity + 1 - 2 ** (max_y_index - 1))
+
+    # Hamiltonian xi-xi terms
+    for k in range(x_size):
+        key = ('x' + str(k), 'x' + str(k))
+        qubo[key] = lagrange * (weights[k] ** 2) - costs[k]
+
+    # Hamiltonian xi-xj terms
+    for i in range(x_size):
+        for j in range(i + 1, x_size):
+            key = ('x' + str(i), 'x' + str(j))
+            qubo[key] = 2 * lagrange * weights[i] * weights[j]
+
+    # Hamiltonian y-y terms
+    for k in range(max_y_index):
+        key = ('y' + str(k), 'y' + str(k))
+        qubo[key] = lagrange * (y[k] ** 2)
+
+    # Hamiltonian yi-yj terms
+    for i in range(max_y_index):
+        for j in range(i + 1, max_y_index):
+            key = ('y' + str(i), 'y' + str(j))
+            qubo[key] = 2 * lagrange * y[i] * y[j]
+
+    # Hamiltonian x-y terms
+    for i in range(x_size):
+        for j in range(max_y_index):
+            key = ('x' + str(i), 'y' + str(j))
+            qubo[key] = -2 * lagrange * weights[i] * y[j]
+
+    return qubo
+
 
 # check that the user has provided data file name, and maximum weight
 # which the knapsack can hold
@@ -41,13 +101,11 @@ except ValueError:
 df = pd.read_csv(data_file_name, header=None)
 df.columns = ['cost', 'weight']
 
-# create the Knapsack object
-knapsack = Knapsack(df['cost'], df['weight'], weight_capacity)
+qubo = knapsack_qubo(df['cost'], df['weight'], weight_capacity)
 
-# Obtain the knapsack BQM
-bqm = knapsack.get_bqm()
+bqm = dimod.BinaryQuadraticModel.from_qubo(qubo)
 
-sampler = LeapHybridSampler(profile="hss")
+sampler = LeapHybridSampler(profile="alpha")
 sampleset = sampler.sample(bqm, time_limit=10)  # doctest: +SKIP
 solution = [df['weight'][i] for i in range(len(df['weight'])) if sampleset.record.sample[0][i] == 1.]
 
