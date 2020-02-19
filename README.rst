@@ -19,7 +19,7 @@ To run a small demo, run the command:
 
   python main.py small_data.txt 50
 
-The command-line arguments specify the Python program, a small data set, and the maximum weight.
+The command-line arguments specify the Python program, a small data set, and the maximum weight (in kilograms). The small data set file includes objects, provided as pairs (weight, value). 
 The answer should include three objects, with combined weight of 45 kg, below 
 the maximum of 50 kg. Their summed value is 205, which agrees with the
 reported energy.
