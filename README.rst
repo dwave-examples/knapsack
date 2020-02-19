@@ -34,9 +34,9 @@ To run the full demo, run the command:
 Code Overview
 -------------
 
-knapsack.py contains an implementation of Andrew Lucas's improved formulation[2] based on his original writeup[1]. Lucas's formulation adds slack variables to handle the less-than-or-equal-to constraint.
+main.py contains an implementation of Andrew Lucas's improved formulation[2] based on his original writeup[1]. Lucas's formulation adds slack variables to handle the less-than-or-equal-to constraint.
 
-The x variables determine whether the weights are to be included in the selected set, and the y variables are the slack variables. 
+The x variables in main.py determine whether the weights are to be included in the selected set, and the y variables in main.py are the slack variables. 
 The code separates out the x-x, x-y, and y-y terms.
 
 The Hamiltonian includes the constraints that the sum of the y variables must
