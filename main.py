@@ -43,12 +43,12 @@ def knapsack_bqm(costs, weights, weight_capacity):
 
     # Slack variable list for Lucas's algorithm. The last variable has
     # a special value because it terminates the sequence.
-    y = [2 ** n for n in range(max_y_index - 1)]
-    y.append(weight_capacity + 1 - 2 ** (max_y_index - 1))
+    y = [2**n for n in range(max_y_index - 1)]
+    y.append(weight_capacity + 1 - 2**(max_y_index - 1))
 
     # Hamiltonian xi-xi terms
     for k in range(x_size):
-        bqm.set_linear('x' + str(k), lagrange * (weights[k] ** 2) - costs[k])
+        bqm.set_linear('x' + str(k), lagrange * (weights[k]**2) - costs[k])
 
     # Hamiltonian xi-xj terms
     for i in range(x_size):
@@ -58,7 +58,7 @@ def knapsack_bqm(costs, weights, weight_capacity):
 
     # Hamiltonian y-y terms
     for k in range(max_y_index):
-        bqm.set_linear('y' + str(k), lagrange * (y[k] ** 2))
+        bqm.set_linear('y' + str(k), lagrange * (y[k]**2))
 
     # Hamiltonian yi-yj terms
     for i in range(max_y_index):
