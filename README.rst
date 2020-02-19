@@ -2,11 +2,12 @@
 Knapsack
 ========
 
-Consider a problem found in packing shipping containers on docks. One has a collection of objects; each object has a value, and a weight. The shipping container has a weight capacity which it can hold. The goal is to pack the shipping container in order to:
-1) maximize the sum total of the values of the objects put into the container
+Consider a problem found in packing shipping containers on docks. There is a collection of objects; each object has a value, and a weight. The shipping container has a weight capacity which it can hold. The goal is to pack the shipping container in order to:
+1) maximize the sum total of the values of the objects put into the container.
 2) fill up the container so that the total weight is less than or equal to the container's capacity.
 
-This problem is known as the knapsack problem. The knapsack problem is well-known optimization problem, To solve on a D-Wave system, we reformulate this problem as a quadratic unconstrained binary optimization problem (QUBO).
+This well-known optimization problem is known as the knapsack problem.
+To solve this problem on a D-Wave system, we reformulate it as a quadratic unconstrained binary optimization problem (QUBO).
 
 
 Usage
@@ -18,6 +19,7 @@ To run a small demo, run the command:
 
   python main.py small_data.txt 50
 
+The command-line arguments specify the Python program, a small data set, and the maximum weight.
 The answer should include three objects, with combined weight of 45 kg, below 
 the maximum of 50 kg. Their summed value is 205, which agrees with the
 reported energy.

@@ -27,10 +27,12 @@ def knapsack_bqm(costs, weights, weight_capacity):
 
     costs = costs
 
-    # Initialize BQM
+    # Initialize BQM - use large-capacity BQM so that the problem can be
+    # scaled by the user.
     bqm = dimod.AdjVectorBQM(dimod.Vartype.BINARY)
 
     # Lagrangian multiplier
+    # First guess as suggested in Lucas's paper
     lagrange = max(costs)
 
     # Number of objects
@@ -84,8 +86,8 @@ df.columns = ['cost', 'weight']
 
 bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
 
-sampler = LeapHybridSampler(profile="alpha")
-sampleset = sampler.sample(bqm, time_limit=10)  # doctest: +SKIP
+sampler = LeapHybridSampler()
+sampleset = sampler.sample(bqm)
 solution = [df['weight'][i] for i in range(len(df['weight'])) if sampleset.record.sample[0][i] == 1.]
 
 print("Found solution {} at energy {}.".format(solution, sampleset.first.energy))
