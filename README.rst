@@ -1,54 +1,56 @@
-===========
-<demo_name>
-===========
+========
+Knapsack
+========
 
-Short blurb on what this demo does.
+Consider a problem found in packing shipping containers on docks. There is a collection of objects; each object has a value, and a weight. The shipping container has a weight capacity which it can hold. The goal is to pack the shipping container in order to:
+1) maximize the sum total of the values of the objects put into the container.
+2) fill up the container so that the total weight is less than or equal to the container's capacity.
 
-If your demo produces a visualization, consider displaying an image of it here.
-
-.. image:: dwave_logo.png
+This well-known optimization problem is known as the knapsack problem.
+To solve this problem on a D-Wave system, we reformulate it as a quadratic unconstrained binary optimization problem (QUBO).
 
 
 Usage
 -----
 
-A simple command that runs the demo. For example,
+To run a small demo, run the command:
 
 .. code-block:: bash
 
-  python <demo_name>.py
+  python main.py small_data.txt 50
+
+The command-line arguments specify the Python program, a small data set, and the maximum weight (in kilograms). The small data set file includes objects, provided as pairs (weight, value). 
+The answer should include three objects, with combined weight of 45 kg, below 
+the maximum of 50 kg. Their summed value is 205, which agrees with the
+reported energy.
+
+To run the full demo, run the command:
+
+.. code-block:: bash
+
+  python main.py
 
 
 Code Overview
 -------------
 
-A general overview of how the code works.
+main.py contains an implementation of Andrew Lucas's improved formulation[2] based on his original writeup[1]. Lucas's formulation adds slack variables to handle the less-than-or-equal-to constraint.
 
-Prefer bite-sized descriptions in bullet points:
+The x variables in main.py determine whether the weights are to be included in the selected set, and the y variables in main.py are the slack variables. 
+The code separates out the x-x, x-y, and y-y terms.
 
-* Here's an example bullet point
-
-
-Code Specifics
---------------
-
-Notable parts of the code implementation.
-
-This is the place to:
-
-* Highlight a part of the code implementation
-* Talk about unusual or potentially difficult parts of the code
-* Explain a code decision
-
-Note: there is no need to repeat everything that is already well-documented in
-the code.
-
+The Hamiltonian includes the constraints that the sum of the y variables must
+be 1; the weight of the knapsack can take only one value. There is also the 
+constraint that the sum of all the weights multiplied by the x variables must
+be less than or equal to the knapsack's weight capacity. The energy term multiplies the costs by the x variables, in order to represent the overall weight placed into the knapsack. The slack variables turn the inequality into an equality.
 
 References
 ----------
 
-A. Person, "Title of Amazing Information",
-`short link name <https://example.com/>`_
+.. [1] Andrew Lucas, "Ising formulations of many NP problems", `doi: 10.3389/fphy.2014.00005 <https://www.frontiersin.org/articles/10.3389/fphy.2014.00005/full>`_
+
+.. [2] Andrew Lucas, "NP-hard combinatorial problems as Ising spin glasses,"
+Workshop on Classical and Quantum Optimization; ETH Zuerich - August 20, 2014
 
 
 License
