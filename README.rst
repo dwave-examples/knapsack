@@ -6,6 +6,7 @@ Consider a problem found in packing shipping containers on docks. There is a
 collection of objects; each object has a value, and a weight. The shipping
 container has a weight capacity which it can hold. The goal is to pack the
 shipping container in order to:
+
 1) maximize the sum total of the values of the objects put into the container.
 2) fill up the container so that the total weight is less than or equal to the
    container's capacity.
