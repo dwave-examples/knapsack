@@ -90,8 +90,10 @@ df.columns = ['cost', 'weight']
 
 bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
 
-sampler = LeapHybridSampler()
+sampler = LeapHybridSampler(profile='hss')
 sampleset = sampler.sample(bqm)
-solution = [df['weight'][i] for i in range(len(df['weight'])) if sampleset.record.sample[0][i] == 1.]
-
-print("Found solution {} at energy {}.".format(solution, sampleset.first.energy))
+var_names = sampleset.variables
+n_sols = sampleset.record.sample.shape[0]
+for i in range(n_sols):
+    solution = [df['weight'][j0] for j0, j in enumerate(sampleset.record.sample[i]) if j == 1. and var_names[j0].startswith('x')]
+    print("Found solution {} at energy {}.".format(solution, sampleset.record.energy[i]))
