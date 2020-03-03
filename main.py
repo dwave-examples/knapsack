@@ -90,7 +90,7 @@ df.columns = ['cost', 'weight']
 
 bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
 
-sampler = LeapHybridSampler(profile='hss')
+sampler = LeapHybridSampler()
 sampleset = sampler.sample(bqm)
 var_names = sampleset.variables
 n_sols = sampleset.record.sample.shape[0]
