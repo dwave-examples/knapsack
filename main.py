@@ -17,14 +17,11 @@ import sys
 from dwave.system import LeapHybridSampler
 from math import log, ceil
 import dimod
+import re
 
 # From Andrew Lucas, NP-hard combinatorial problems as Ising spin glasses
 # Workshop on Classical and Quantum Optimization; ETH Zuerich - August 20, 2014
 # based on Lucas, Frontiers in Physics _2, 5 (2014)
-
-
-def get_label(lbl, i):
-    return lbl + str(i).zfill(2)
 
 
 def knapsack_bqm(costs, weights, weight_capacity):
@@ -54,28 +51,28 @@ def knapsack_bqm(costs, weights, weight_capacity):
 
     # Hamiltonian xi-xi terms
     for k in range(x_size):
-        bqm.set_linear(get_label('x', k), lagrange * (weights[k]**2) - costs[k])
+        bqm.set_linear('x' + str(k), lagrange * (weights[k]**2) - costs[k])
 
     # Hamiltonian xi-xj terms
     for i in range(x_size):
         for j in range(i + 1, x_size):
-            key = (get_label('x', i), get_label('x', j))
+            key = ('x' + str(i), 'x' + str(j))
             bqm.quadratic[key] = 2 * lagrange * weights[i] * weights[j]
 
     # Hamiltonian y-y terms
     for k in range(max_y_index):
-        bqm.set_linear(get_label('y', k), lagrange * (y[k]**2))
+        bqm.set_linear('y' + str(k), lagrange * (y[k]**2))
 
     # Hamiltonian yi-yj terms
     for i in range(max_y_index):
         for j in range(i + 1, max_y_index):
-            key = (get_label('y', i), get_label('y', j))
+            key = ('y' + str(i), 'y' + str(j))
             bqm.quadratic[key] = 2 * lagrange * y[i] * y[j]
 
     # Hamiltonian x-y terms
     for i in range(x_size):
         for j in range(max_y_index):
-            key = (get_label('x', i), get_label('y', j))
+            key = ('x' + str(i), 'y' + str(j))
             bqm.quadratic[key] = -2 * lagrange * weights[i] * y[j]
 
     return bqm
@@ -92,8 +89,17 @@ bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
 
 sampler = LeapHybridSampler()
 sampleset = sampler.sample(bqm)
-var_names = sampleset.variables
 n_sols = sampleset.record.sample.shape[0]
 for i in range(n_sols):
-    solution = [df['weight'][j0] for j0, j in enumerate(sampleset.record.sample[i]) if j == 1. and var_names[j0].startswith('x')]
+
+    # Build solution from returned bitstring
+    solution = []
+    for j0, j in enumerate(sampleset.record.sample[i]):
+        # The x's indicate whether each object has been selected
+        if j == 1. and sampleset.variables[j0].startswith('x'):
+            # Indexing of the weights is different than the bitstring;
+            # cannot guarantee any ordering of the bitstring, but the
+            # weights are numerically sorted
+            a1 = re.search("x(\d+)", sampleset.variables[j0])
+            solution.append(df['weight'][int(a1.group(1))])
     print("Found solution {} at energy {}.".format(solution, sampleset.record.energy[i]))
