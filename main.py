@@ -17,7 +17,6 @@ import sys
 from dwave.system import LeapHybridSampler
 from math import log, ceil
 import dimod
-import re
 
 # From Andrew Lucas, NP-hard combinatorial problems as Ising spin glasses
 # Workshop on Classical and Quantum Optimization; ETH Zuerich - August 20, 2014
@@ -89,17 +88,16 @@ bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
 
 sampler = LeapHybridSampler()
 sampleset = sampler.sample(bqm)
-n_sols = sampleset.record.sample.shape[0]
-for i in range(n_sols):
+for sample, energy in zip(sampleset.record.sample, sampleset.record.energy):
 
     # Build solution from returned bitstring
     solution = []
-    for j0, j in enumerate(sampleset.record.sample[i]):
+    for this_bit_index, this_bit in enumerate(sample):
         # The x's indicate whether each object has been selected
-        if j == 1. and sampleset.variables[j0].startswith('x'):
+        this_var = sampleset.variables[this_bit_index]
+        if this_bit == 1. and this_var.startswith('x'):
             # Indexing of the weights is different than the bitstring;
             # cannot guarantee any ordering of the bitstring, but the
             # weights are numerically sorted
-            a1 = re.search("x(\d+)", sampleset.variables[j0])
-            solution.append(df['weight'][int(a1.group(1))])
-    print("Found solution {} at energy {}.".format(solution, sampleset.record.energy[i]))
+            solution.append(df['weight'][int(this_var[1:])])
+    print("Found solution {} at energy {}.".format(solution, energy))
