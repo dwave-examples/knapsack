@@ -95,7 +95,7 @@ for sample, energy in zip(sampleset.record.sample, sampleset.record.energy):
     for this_bit_index, this_bit in enumerate(sample):
         # The x's indicate whether each object has been selected
         this_var = sampleset.variables[this_bit_index]
-        if this_bit == 1. and this_var.startswith('x'):
+        if this_bit and this_var.startswith('x'):
             # Indexing of the weights is different than the bitstring;
             # cannot guarantee any ordering of the bitstring, but the
             # weights are numerically sorted
