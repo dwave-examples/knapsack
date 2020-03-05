@@ -88,6 +88,16 @@ bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
 
 sampler = LeapHybridSampler()
 sampleset = sampler.sample(bqm)
-solution = [df['weight'][i] for i in range(len(df['weight'])) if sampleset.record.sample[0][i] == 1.]
+for sample, energy in zip(sampleset.record.sample, sampleset.record.energy):
 
-print("Found solution {} at energy {}.".format(solution, sampleset.first.energy))
+    # Build solution from returned bitstring
+    solution = []
+    for this_bit_index, this_bit in enumerate(sample):
+        # The x's indicate whether each object has been selected
+        this_var = sampleset.variables[this_bit_index]
+        if this_bit and this_var.startswith('x'):
+            # Indexing of the weights is different than the bitstring;
+            # cannot guarantee any ordering of the bitstring, but the
+            # weights are numerically sorted
+            solution.append(df['weight'][int(this_var[1:])])
+    print("Found solution {} at energy {}.".format(solution, energy))
