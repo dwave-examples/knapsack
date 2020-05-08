@@ -1,3 +1,7 @@
+.. image:: https://circleci.com/gh/dwave-examples/knapsack.svg?style=svg
+    :target: https://circleci.com/gh/dwave-examples/knapsack
+    :alt: Linux/Mac/Windows build status
+
 ========
 Knapsack
 ========
