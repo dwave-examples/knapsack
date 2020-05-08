@@ -13,6 +13,7 @@
 # limitations under the License.
 import os
 import subprocess
+import sys
 import unittest
 
 example_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,7 +26,8 @@ class TestSmoke(unittest.TestCase):
         data_file_path = os.path.join(example_dir, 'small_data.txt')
         test_case_weight = '50'
 
-        value = subprocess.check_output(["python", file_path, data_file_path, test_case_weight])
+        value = subprocess.check_output([sys.executable, file_path,
+                                         data_file_path, test_case_weight])
 
         # Check the expected energy
         energy_expected = "-205"
