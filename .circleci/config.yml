@@ -266,7 +266,7 @@ workflows:
       - test-win-py37
       - test-win-py36
       - test-win-py35
-      - test-win-py38x86
+      #- test-win-py38x86
       - test-win-py37x86
       - test-win-py36x86
       - test-win-py35x86
