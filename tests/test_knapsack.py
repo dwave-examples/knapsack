@@ -48,7 +48,7 @@ class TestSmoke(unittest.TestCase):
                                          data_file_path])
         output = str(output).upper()
         if os.getenv('DEBUG_OUTPUT'):
-            print("Example output \n"+ output)
+            print("Example output :-"+ output)
 
         with self.subTest(msg="Verify if output contains 'FOUND SOLUTION' \n"):
             self.assertIn("FOUND SOLUTION", output)
