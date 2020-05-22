@@ -39,5 +39,23 @@ class TestSmoke(unittest.TestCase):
         soln_expected = [20, 10, 15]
         self.assertEqual(eval(soln[1]), soln_expected)
 
+    def test_knapsack(self):
+        """ Verify contents of output """
+        
+        file_path = os.path.join(example_dir, 'main.py')
+        data_file_path = os.path.join(example_dir, 'small_data.txt')
+        output = subprocess.check_output([sys.executable, file_path,
+                                         data_file_path])
+        output = str(output).upper()
+        if os.getenv('DEBUG_OUTPUT'):
+            print("Example output :-"+ output)
+
+        with self.subTest(msg="Verify if output contains 'FOUND SOLUTION' \n"):
+            self.assertIn("FOUND SOLUTION", output)
+        with self.subTest(msg="Verify if error string contains in output \n"):
+            self.assertNotIn("ERROR", output)
+        with self.subTest(msg="Verify if warning string contains in output \n"):
+            self.assertNotIn("WARNING", output)
+
 if __name__ == '__main__':
     unittest.main()
