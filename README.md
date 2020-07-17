@@ -1,10 +1,8 @@
-.. image:: https://circleci.com/gh/dwave-examples/knapsack.svg?style=svg
-    :target: https://circleci.com/gh/dwave-examples/knapsack
-    :alt: Linux/Mac/Windows build status
+[![Linux/Mac/Windows build status](
+  https://circleci.com/gh/dwave-examples/knapsack.svg?style=svg)](
+  https://circleci.com/gh/dwave-examples/knapsack)
 
-========
-Knapsack
-========
+# Knapsack
 
 Consider a problem found in packing shipping containers on docks. There is a
 collection of objects; each object has a value, and a weight. The shipping
@@ -19,15 +17,13 @@ This well-known optimization problem is known as the knapsack problem.
 To solve this problem on a D-Wave system, we reformulate it as a quadratic
 unconstrained binary optimization problem (QUBO).
 
-
-Usage
------
+## Usage
 
 To run a small demo, run the command:
 
-.. code-block:: bash
-
-  python main.py small_data.txt 50
+```bash
+python main.py small_data.txt 50
+```
 
 The command-line arguments specify the Python program, a small data set, and the
 maximum weight (in kilograms). The small data set file includes objects,
@@ -37,13 +33,11 @@ with combined weight of 45 kg, below the maximum of 50 kg. Their summed value is
 
 To run the full demo, run the command:
 
-.. code-block:: bash
+```bash
+python main.py
+```
 
-  python main.py
-
-
-Code Overview
--------------
+## Code Overview
 
 main.py contains an implementation of Andrew Lucas's improved formulation[2]
 based on his original writeup[1]. Lucas's formulation adds slack variables to
@@ -60,17 +54,14 @@ less than or equal to the knapsack's weight capacity. The energy term multiplies
 the costs by the x variables, in order to represent the overall weight placed
 into the knapsack. The slack variables turn the inequality into an equality.
 
-References
-----------
+## References
 
-.. [1] Andrew Lucas, "Ising formulations of many NP problems",
-       `doi: 10.3389/fphy.2014.00005 <https://www.frontiersin.org/articles/10.3389/fphy.2014.00005/full>`_
+[1] Andrew Lucas, "Ising formulations of many NP problems", [doi:
+10.3389/fphy.2014.00005](https://www.frontiersin.org/articles/10.3389/fphy.2014.00005/full)
 
-.. [2] Andrew Lucas, "NP-hard combinatorial problems as Ising spin glasses",
-       Workshop on Classical and Quantum Optimization; ETH Zuerich - August 20, 2014
+[2] Andrew Lucas, "NP-hard combinatorial problems as Ising spin glasses", Workshop
+on Classical and Quantum Optimization; ETH Zuerich - August 20, 2014
 
+## License
 
-License
--------
-
-Released under the Apache License 2.0. See `LICENSE <LICENSE>`_ file.
+Released under the Apache License 2.0. See [LICENSE](LICENSE) file.
