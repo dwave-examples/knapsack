@@ -37,6 +37,12 @@ To run the full demo, run the command:
 python main.py
 ```
 
+To run a bigger demo, run the command:
+
+```bash
+python main.py data2.py 190
+```
+
 ## Code Overview
 
 main.py contains an implementation of Andrew Lucas's improved formulation[2]
