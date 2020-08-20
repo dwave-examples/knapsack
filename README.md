@@ -40,7 +40,7 @@ python main.py
 To run a bigger demo, run the command:
 
 ```bash
-python main.py data2.py 190
+python main.py data2.txt 190
 ```
 
 ## Code Overview
