@@ -77,7 +77,7 @@ def knapsack_bqm(costs, weights, weight_capacity):
     return bqm
 
 
-data_file_name = sys.argv[1] if len(sys.argv) > 1 else "data.txt"
+data_file_name = sys.argv[1] if len(sys.argv) > 1 else "data/data.csv"
 weight_capacity = float(sys.argv[2]) if len(sys.argv) > 2 else 70
 
 # parse input data
@@ -86,7 +86,7 @@ df.columns = ['cost', 'weight']
 
 bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
 
-sampler = LeapHybridSampler()
+sampler = LeapHybridSampler(solver='hybrid_v2')
 sampleset = sampler.sample(bqm)
 for sample, energy in zip(sampleset.record.sample, sampleset.record.energy):
 

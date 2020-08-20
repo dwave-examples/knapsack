@@ -22,7 +22,7 @@ unconstrained binary optimization problem (QUBO).
 To run a small demo, run the command:
 
 ```bash
-python main.py small_data.txt 50
+python main.py data/small_data.csv 50
 ```
 
 The command-line arguments specify the Python program, a small data set, and the
@@ -40,7 +40,13 @@ python main.py
 To run a bigger demo, run the command:
 
 ```bash
-python main.py data2.txt 190
+python main.py data/data2.csv 190
+```
+
+To run a much bigger demo, run the command:
+
+```bash
+python main.py data/data3.csv 400
 ```
 
 ## Code Overview
