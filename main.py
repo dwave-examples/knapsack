@@ -77,7 +77,7 @@ def knapsack_bqm(costs, weights, weight_capacity):
     return bqm
 
 
-data_file_name = sys.argv[1] if len(sys.argv) > 1 else "data/data.csv"
+data_file_name = sys.argv[1] if len(sys.argv) > 1 else "data/large.csv"
 weight_capacity = float(sys.argv[2]) if len(sys.argv) > 2 else 70
 
 # parse input data
