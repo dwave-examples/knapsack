@@ -23,7 +23,7 @@ class TestSmoke(unittest.TestCase):
     # test that the example runs without failing
     def test_smoke(self):
         file_path = os.path.join(example_dir, 'main.py')
-        data_file_path = os.path.join(example_dir, 'small_data.txt')
+        data_file_path = os.path.join(example_dir, 'data/small.csv')
         test_case_weight = '50'
 
         value = subprocess.check_output([sys.executable, file_path,
@@ -43,7 +43,7 @@ class TestSmoke(unittest.TestCase):
         """ Verify contents of output """
         
         file_path = os.path.join(example_dir, 'main.py')
-        data_file_path = os.path.join(example_dir, 'small_data.txt')
+        data_file_path = os.path.join(example_dir, 'data/small.csv')
         output = subprocess.check_output([sys.executable, file_path,
                                          data_file_path])
         output = str(output).upper()
