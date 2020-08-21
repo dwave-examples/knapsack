@@ -86,7 +86,7 @@ df.columns = ['cost', 'weight']
 
 bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
 
-sampler = LeapHybridSampler(solver='hybrid_v2')
+sampler = LeapHybridSampler()
 sampleset = sampler.sample(bqm)
 for sample, energy in zip(sampleset.record.sample, sampleset.record.energy):
 
