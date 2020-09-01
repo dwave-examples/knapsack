@@ -45,13 +45,44 @@ class TestSmoke(unittest.TestCase):
         file_path = os.path.join(example_dir, 'main.py')
         data_file_path = os.path.join(example_dir, 'data/small.csv')
         output = subprocess.check_output([sys.executable, file_path,
-                                         data_file_path])
+                                         data_file_path, "50"])
         output = str(output).upper()
         if os.getenv('DEBUG_OUTPUT'):
             print("Example output :-"+ output)
 
         with self.subTest(msg="Verify if output contains 'FOUND SOLUTION' \n"):
             self.assertIn("FOUND SOLUTION", output)
+        with self.subTest(msg="Verify if output contains correct energy' \n"):
+            self.assertIn("ENERGY -205.0", output)
+        with self.subTest(msg="Verify if error string contains in output \n"):
+            self.assertNotIn("ERROR", output)
+        with self.subTest(msg="Verify if warning string contains in output \n"):
+            self.assertNotIn("WARNING", output)
+
+    def test_knapsack_full_demo(self):
+        """ Verify contents of output """
+        
+        file_path = os.path.join(example_dir, 'main.py')
+        output = subprocess.check_output([sys.executable, file_path])
+
+        output = str(output).upper()
+        if os.getenv('DEBUG_OUTPUT'):
+            print("Example output :-"+ output)
+        
+        # Get energy value returned by solution
+        index = output.index("ENERGY") + 7
+        energy = ""
+        i = 0
+        while i < 5 and len(output)> index:
+            energy = energy + output[index]
+            i = i + 1
+            index = index + 1
+        energy = (float(energy))
+        
+        with self.subTest(msg="Verify if output contains 'FOUND SOLUTION' \n"):
+            self.assertIn("FOUND SOLUTION", output)
+        with self.subTest(msg="Verify if the energy needs to be between -519 and -524' \n"):
+            self.assertTrue(-524 < energy <= -519)
         with self.subTest(msg="Verify if error string contains in output \n"):
             self.assertNotIn("ERROR", output)
         with self.subTest(msg="Verify if warning string contains in output \n"):
