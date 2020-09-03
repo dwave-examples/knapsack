@@ -63,12 +63,13 @@ class TestSmoke(unittest.TestCase):
         """ Verify contents of output """
         
         file_path = os.path.join(example_dir, 'main.py')
+        data_file_path = os.path.join(example_dir, 'data/large.csv')
 
         # Due to heuristic nature of solver/solution if energy doesn't match the expected one retry few times
         runcount = 0
         energy = 0
         while runcount < 3 and not -524 < energy <= -519:
-            output = subprocess.check_output([sys.executable, file_path])
+            output = subprocess.check_output([sys.executable, file_path, data_file_path])
             output = str(output).upper()
 
             if os.getenv('DEBUG_OUTPUT'):
