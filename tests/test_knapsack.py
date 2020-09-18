@@ -83,8 +83,8 @@ class TestSmoke(unittest.TestCase):
 
         with self.subTest(msg="Verify if output contains 'FOUND SOLUTION' \n"):
             self.assertIn("FOUND SOLUTION", output)
-        with self.subTest(msg="Verify energy is between -519 and -524'\n"):
-            self.assertTrue(-524 < energy <= -519)
+        with self.subTest(msg="Verify energy is between -515 and -524'\n"):
+            self.assertTrue(-524 < energy <= -515)
         with self.subTest(msg="Verify if error string contains in output \n"):
             self.assertNotIn("ERROR", output)
         with self.subTest(msg="Verify if warning string contains in output \n"):
