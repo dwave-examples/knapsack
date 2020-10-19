@@ -15,6 +15,7 @@ import os
 import subprocess
 import sys
 import unittest
+import re
 
 example_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -68,7 +69,9 @@ class TestSmoke(unittest.TestCase):
         # Due to heuristic nature of solver/solution if energy doesn't match the expected one retry few times
         runcount = 0
         energy = 0
-        while runcount < 3 and not -524 < energy <= -519:
+        upperbound_energy = -515
+        lowerbound_energy = -524
+        while runcount < 3 and not lowerbound_energy < energy <= upperbound_energy:
             output = subprocess.check_output([sys.executable, file_path, data_file_path])
             output = str(output).upper()
 
@@ -76,15 +79,14 @@ class TestSmoke(unittest.TestCase):
                 print("Example output :-"+ output)
             
             # Get energy value returned by solution
-            import re
             regex = r'ENERGY\s*([+-]?\d+(\.\d*)?)'
             energy = float(next(re.finditer(regex, output, re.I)).group(1))
             runcount += 1
 
         with self.subTest(msg="Verify if output contains 'FOUND SOLUTION' \n"):
             self.assertIn("FOUND SOLUTION", output)
-        with self.subTest(msg="Verify energy is between -519 and -524'\n"):
-            self.assertTrue(-524 < energy <= -519)
+        with self.subTest(msg="Verify energy is between "+ str(upperbound_energy) +" and "+ str(lowerbound_energy) +"'\n"):
+            self.assertTrue(lowerbound_energy < energy <= upperbound_energy)
         with self.subTest(msg="Verify if error string contains in output \n"):
             self.assertNotIn("ERROR", output)
         with self.subTest(msg="Verify if warning string contains in output \n"):
