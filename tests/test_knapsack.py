@@ -60,37 +60,5 @@ class TestSmoke(unittest.TestCase):
         with self.subTest(msg="Verify if warning string contains in output \n"):
             self.assertNotIn("WARNING", output)
 
-    def test_knapsack_full_demo(self):
-        """ Verify contents of output """
-        
-        file_path = os.path.join(example_dir, 'main.py')
-        data_file_path = os.path.join(example_dir, 'data/large.csv')
-
-        # Due to heuristic nature of solver/solution if energy doesn't match the expected one retry few times
-        runcount = 0
-        energy = 0
-        upperbound_energy = -515
-        lowerbound_energy = -524
-        while runcount < 3 and not lowerbound_energy < energy <= upperbound_energy:
-            output = subprocess.check_output([sys.executable, file_path, data_file_path])
-            output = str(output).upper()
-
-            if os.getenv('DEBUG_OUTPUT'):
-                print("Example output :-"+ output)
-            
-            # Get energy value returned by solution
-            regex = r'ENERGY\s*([+-]?\d+(\.\d*)?)'
-            energy = float(next(re.finditer(regex, output, re.I)).group(1))
-            runcount += 1
-
-        with self.subTest(msg="Verify if output contains 'FOUND SOLUTION' \n"):
-            self.assertIn("FOUND SOLUTION", output)
-        with self.subTest(msg="Verify energy is between "+ str(upperbound_energy) +" and "+ str(lowerbound_energy) +"'\n"):
-            self.assertTrue(lowerbound_energy < energy <= upperbound_energy)
-        with self.subTest(msg="Verify if error string contains in output \n"):
-            self.assertNotIn("ERROR", output)
-        with self.subTest(msg="Verify if warning string contains in output \n"):
-            self.assertNotIn("WARNING", output)
-
 if __name__ == '__main__':
     unittest.main()
