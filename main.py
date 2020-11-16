@@ -15,7 +15,7 @@
 import pandas as pd
 import sys
 from dwave.system import LeapHybridSampler
-from math import log, ceil
+from math import log2, ceil
 import dimod
 
 # From Andrew Lucas, NP-hard combinatorial problems as Ising spin glasses
@@ -41,7 +41,7 @@ def knapsack_bqm(costs, weights, weight_capacity):
     # Lucas's algorithm introduces additional slack variables to handle
     # the inequality. max_y_index indicates the maximum index in the y
     # sum; hence the number of slack variables.
-    max_y_index = ceil(log(weight_capacity))
+    max_y_index = ceil(log2(weight_capacity))
 
     # Slack variable list for Lucas's algorithm. The last variable has
     # a special value because it terminates the sequence.
