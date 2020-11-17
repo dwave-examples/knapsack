@@ -15,7 +15,7 @@
 import pandas as pd
 import sys
 from dwave.system import LeapHybridSampler
-from math import log2, ceil
+from math import log2, floor
 import dimod
 
 # From Andrew Lucas, NP-hard combinatorial problems as Ising spin glasses
@@ -38,15 +38,16 @@ def knapsack_bqm(costs, weights, weight_capacity):
     # Number of objects
     x_size = len(costs)
 
-    # Lucas's algorithm introduces additional slack variables to handle
-    # the inequality. max_y_index indicates the maximum index in the y
-    # sum; hence the number of slack variables.
-    max_y_index = ceil(log2(weight_capacity))
+    # Lucas's algorithm introduces additional slack variables to
+    # handle the inequality. M+1 binary slack variables are needed to
+    # represent the sum using a set of powers of 2.
+    M = floor(log2(weight_capacity))
+    num_slack_variables = M + 1
 
     # Slack variable list for Lucas's algorithm. The last variable has
     # a special value because it terminates the sequence.
-    y = [2**n for n in range(max_y_index - 1)]
-    y.append(weight_capacity + 1 - 2**(max_y_index - 1))
+    y = [2**n for n in range(M)]
+    y.append(weight_capacity + 1 - 2**M)
 
     # Hamiltonian xi-xi terms
     for k in range(x_size):
@@ -59,18 +60,18 @@ def knapsack_bqm(costs, weights, weight_capacity):
             bqm.quadratic[key] = 2 * lagrange * weights[i] * weights[j]
 
     # Hamiltonian y-y terms
-    for k in range(max_y_index):
+    for k in range(num_slack_variables):
         bqm.set_linear('y' + str(k), lagrange * (y[k]**2))
 
     # Hamiltonian yi-yj terms
-    for i in range(max_y_index):
-        for j in range(i + 1, max_y_index):
+    for i in range(num_slack_variables):
+        for j in range(i + 1, num_slack_variables):
             key = ('y' + str(i), 'y' + str(j))
             bqm.quadratic[key] = 2 * lagrange * y[i] * y[j]
 
     # Hamiltonian x-y terms
     for i in range(x_size):
-        for j in range(max_y_index):
+        for j in range(num_slack_variables):
             key = ('x' + str(i), 'y' + str(j))
             bqm.quadratic[key] = -2 * lagrange * weights[i] * y[j]
 
