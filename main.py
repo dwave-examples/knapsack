@@ -24,6 +24,19 @@ import dimod
 
 
 def knapsack_bqm(costs, weights, weight_capacity):
+    """Construct BQM for the knapsack problem
+    
+    Args:
+        costs (array-like):
+            Array of costs associated with the items
+        weights (array-like):
+            Array of weights associated with the items
+        weight_capacity (int):
+            Maximum allowable weight
+    
+    Returns:
+        Binary quadratic model instance
+    """
 
     # Initialize BQM - use large-capacity BQM so that the problem can be
     # scaled by the user.
