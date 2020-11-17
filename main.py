@@ -25,8 +25,6 @@ import dimod
 
 def knapsack_bqm(costs, weights, weight_capacity):
 
-    costs = costs
-
     # Initialize BQM - use large-capacity BQM so that the problem can be
     # scaled by the user.
     bqm = dimod.AdjVectorBQM(dimod.Vartype.BINARY)
