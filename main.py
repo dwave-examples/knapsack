@@ -89,29 +89,31 @@ def knapsack_bqm(costs, weights, weight_capacity):
     return bqm
 
 
-data_file_name = sys.argv[1] if len(sys.argv) > 1 else "data/large.csv"
-weight_capacity = float(sys.argv[2]) if len(sys.argv) > 2 else 70
+if __name__ == '__main__':
 
-# parse input data
-df = pd.read_csv(data_file_name, header=None)
-df.columns = ['cost', 'weight']
+    data_file_name = sys.argv[1] if len(sys.argv) > 1 else "data/large.csv"
+    weight_capacity = float(sys.argv[2]) if len(sys.argv) > 2 else 70
 
-bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
+    # parse input data
+    df = pd.read_csv(data_file_name, header=None)
+    df.columns = ['cost', 'weight']
 
-sampler = LeapHybridSampler()
+    bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
 
-sampleset = sampler.sample(bqm)
-sample = sampleset.first.sample
-energy = sampleset.first.energy
+    sampler = LeapHybridSampler()
 
-# Build solution from returned binary variables:
-solution = []
-for varname, value in sample.items():
-    # For each "x" variable, check whether its value is set, which
-    # indicates that the corresponding item is included in the
-    # knapsack
-    if value and varname.startswith('x'):
-        # The index into the weight array is retrieved from the
-        # variable name
-        solution.append(df['weight'][int(varname[1:])])
-print("Found solution {} at energy {}".format(solution, energy))
+    sampleset = sampler.sample(bqm)
+    sample = sampleset.first.sample
+    energy = sampleset.first.energy
+
+    # Build solution from returned binary variables:
+    solution = []
+    for varname, value in sample.items():
+        # For each "x" variable, check whether its value is set, which
+        # indicates that the corresponding item is included in the
+        # knapsack
+        if value and varname.startswith('x'):
+            # The index into the weight array is retrieved from the
+            # variable name
+            solution.append(df['weight'][int(varname[1:])])
+    print("Found solution {} at energy {}".format(solution, energy))
