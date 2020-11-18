@@ -114,4 +114,4 @@ for varname, value in sample.items():
         # The index into the weight array is retrieved from the
         # variable name
         solution.append(df['weight'][int(varname[1:])])
-print("Found solution {} at energy {}.".format(solution, energy))
+print("Found solution {} at energy {}".format(solution, energy))

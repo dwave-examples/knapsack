@@ -15,50 +15,38 @@ import os
 import subprocess
 import sys
 import unittest
-import re
 
 example_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-class TestSmoke(unittest.TestCase):
-    # test that the example runs without failing
-    def test_smoke(self):
+class TestSmallProblem(unittest.TestCase):
+    """Test the problem defined by small.csv"""
+
+    @classmethod
+    def setUpClass(cls):
+        """Utility method that runs the problem and stores the output"""
+        
         file_path = os.path.join(example_dir, 'main.py')
         data_file_path = os.path.join(example_dir, 'data/small.csv')
         test_case_weight = '50'
 
-        value = subprocess.check_output([sys.executable, file_path,
-                                         data_file_path, test_case_weight])
+        cls.output = subprocess.check_output([sys.executable, file_path,
+                                              data_file_path, test_case_weight])
+        cls.output = cls.output.decode('utf-8') # Bytes to str
 
-        # Check the expected energy
-        energy_expected = "-205"
-        self.assertTrue(energy_expected in str(value))
+    def test_smoke(self):
+        """Verify that the executable script runs and reports some solution"""
 
-        # Extract the list from the solution
-        z = str(value).split(" at energy")
-        soln = z[0].split("Found solution ")
-        soln_expected = [20, 10, 15]
-        self.assertEqual(eval(soln[1]), soln_expected)
+        self.assertIn("found solution", self.output.lower())
 
-    def test_knapsack(self):
-        """ Verify contents of output """
-        
-        file_path = os.path.join(example_dir, 'main.py')
-        data_file_path = os.path.join(example_dir, 'data/small.csv')
-        output = subprocess.check_output([sys.executable, file_path,
-                                         data_file_path, "50"])
-        output = str(output).upper()
-        if os.getenv('DEBUG_OUTPUT'):
-            print("Example output :-"+ output)
+    def test_solution(self):
+        """Verify that the expected solution is obtained"""
 
-        with self.subTest(msg="Verify if output contains 'FOUND SOLUTION' \n"):
-            self.assertIn("FOUND SOLUTION", output)
-        with self.subTest(msg="Verify if output contains correct energy' \n"):
-            self.assertIn("ENERGY -205.0", output)
-        with self.subTest(msg="Verify if error string contains in output \n"):
-            self.assertNotIn("ERROR", output)
-        with self.subTest(msg="Verify if warning string contains in output \n"):
-            self.assertNotIn("WARNING", output)
+        solution = self.output.split(" at energy")[0].split("solution ")[1]
+        energy = int(float(self.output.split()[-1].strip()))
+        self.assertEqual(eval(solution), [20, 10, 15])
+        self.assertEqual(energy, -205)
+
 
 if __name__ == '__main__':
     unittest.main()
