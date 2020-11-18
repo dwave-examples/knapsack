@@ -26,7 +26,7 @@ class TestSmallProblem(unittest.TestCase):
     def setUpClass(cls):
         """Utility method that runs the problem and stores the output"""
         
-        file_path = os.path.join(example_dir, 'main.py')
+        file_path = os.path.join(example_dir, 'knapsack.py')
         data_file_path = os.path.join(example_dir, 'data/small.csv')
         test_case_weight = '50'
 

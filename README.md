@@ -22,7 +22,7 @@ unconstrained binary optimization problem (QUBO).
 To run a small demo, run the command:
 
 ```bash
-python main.py data/small.csv 50
+python knapsack.py data/small.csv 50
 ```
 
 The command-line arguments specify the Python program, a small data set, and the
@@ -34,30 +34,30 @@ with combined weight of 45 kg, below the maximum of 50 kg. Their summed value is
 To run the full demo, run the command:
 
 ```bash
-python main.py
+python knapsack.py
 ```
 
 To run a bigger demo, run the command:
 
 ```bash
-python main.py data/very_large.csv 190
+python knapsack.py data/very_large.csv 190
 ```
 
 To run a much bigger demo, run the command:
 
 ```bash
-python main.py data/huge.csv 400
+python knapsack.py data/huge.csv 400
 ```
 
 To run a very small demo, run the command:
 
 ```bash
-python main.py data/very_small.csv 10
+python knapsack.py data/very_small.csv 10
 ```
 
 ## Code Overview
 
-The code in `main.py` includes an implementation of the knapsack problem using
+The code in `knapsack.py` includes an implementation of the knapsack problem using
 auxiliary variables to represent the inequality constraint associated with the
 maximum weight.  The formulation is based on the work of Andrew Lucas [1,2].
 
