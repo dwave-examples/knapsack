@@ -132,8 +132,7 @@ if __name__ == '__main__':
     weight_capacity = float(sys.argv[2]) if len(sys.argv) > 2 else 70
 
     # parse input data
-    df = pd.read_csv(data_file_name, header=None)
-    df.columns = ['cost', 'weight']
+    df = pd.read_csv(data_file_name, names=['cost', 'weight'])
 
     selected_item_indices, energy = solve_knapsack(df['cost'], df['weight'], weight_capacity)
     selected_weights = list(df.loc[selected_item_indices,'weight'])
