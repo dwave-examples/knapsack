@@ -49,6 +49,12 @@ To run a much bigger demo, run the command:
 python main.py data/huge.csv 400
 ```
 
+To run a very small demo, run the command:
+
+```bash
+python main.py data/very_small.csv 10
+```
+
 ## Code Overview
 
 main.py contains an implementation of Andrew Lucas's improved formulation[2]
