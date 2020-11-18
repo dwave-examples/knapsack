@@ -42,9 +42,9 @@ class TestSmallProblem(unittest.TestCase):
     def test_solution(self):
         """Verify that the expected solution is obtained"""
 
-        solution = self.output.split(" at energy")[0].split("solution ")[1]
-        energy = int(float(self.output.split()[-1].strip()))
-        self.assertEqual(eval(solution), [20, 10, 15])
+        energy = int(float(self.output.split('\n')[0].split()[-1].strip()))
+        item_indices = self.output.split('\n')[1].split(':')[1]
+        self.assertEqual(eval(item_indices), [4, 5, 6])
         self.assertEqual(energy, -205)
 
 

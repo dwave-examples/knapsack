@@ -23,7 +23,7 @@ import dimod
 # based on Lucas, Frontiers in Physics _2, 5 (2014)
 
 
-def knapsack_bqm(costs, weights, weight_capacity):
+def build_knapsack_bqm(costs, weights, weight_capacity):
     """Construct BQM for the knapsack problem
     
     Args:
@@ -88,6 +88,43 @@ def knapsack_bqm(costs, weights, weight_capacity):
 
     return bqm
 
+def solve_knapsack(costs, weights, weight_capacity):
+    """Construct BQM and solve the knapsack problem
+    
+    Args:
+        costs (array-like):
+            Array of costs associated with the items
+        weights (array-like):
+            Array of weights associated with the items
+        weight_capacity (int):
+            Maximum allowable weight
+    
+    Returns:
+        Tuple:
+            List of indices of selected items
+            Solution energy
+    """
+    bqm = build_knapsack_bqm(costs, weights, weight_capacity)
+
+    sampler = LeapHybridSampler()
+
+    sampleset = sampler.sample(bqm)
+    sample = sampleset.first.sample
+    energy = sampleset.first.energy
+
+    # Build solution from returned binary variables:
+    selected_item_indices = []
+    for varname, value in sample.items():
+        # For each "x" variable, check whether its value is set, which
+        # indicates that the corresponding item is included in the
+        # knapsack
+        if value and varname.startswith('x'):
+            # The index into the weight array is retrieved from the
+            # variable name
+            selected_item_indices.append(int(varname[1:]))
+
+    return selected_item_indices, energy
+
 
 if __name__ == '__main__':
 
@@ -98,22 +135,11 @@ if __name__ == '__main__':
     df = pd.read_csv(data_file_name, header=None)
     df.columns = ['cost', 'weight']
 
-    bqm = knapsack_bqm(df['cost'], df['weight'], weight_capacity)
+    selected_item_indices, energy = solve_knapsack(df['cost'], df['weight'], weight_capacity)
+    selected_weights = list(df.loc[selected_item_indices,'weight'])
+    selected_costs = list(df.loc[selected_item_indices,'cost'])
 
-    sampler = LeapHybridSampler()
-
-    sampleset = sampler.sample(bqm)
-    sample = sampleset.first.sample
-    energy = sampleset.first.energy
-
-    # Build solution from returned binary variables:
-    solution = []
-    for varname, value in sample.items():
-        # For each "x" variable, check whether its value is set, which
-        # indicates that the corresponding item is included in the
-        # knapsack
-        if value and varname.startswith('x'):
-            # The index into the weight array is retrieved from the
-            # variable name
-            solution.append(df['weight'][int(varname[1:])])
-    print("Found solution {} at energy {}".format(solution, energy))
+    print("Found solution at energy {}".format(energy))
+    print("Selected item numbers (0-indexed):", selected_item_indices)
+    print("Selected item weights: {}, total = {}".format(selected_weights, sum(selected_weights)))
+    print("Selected item costs: {}, total = {}".format(selected_costs, sum(selected_costs)))
