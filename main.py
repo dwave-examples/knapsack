@@ -88,7 +88,7 @@ def build_knapsack_bqm(costs, weights, weight_capacity):
 
     return bqm
 
-def solve_knapsack(costs, weights, weight_capacity):
+def solve_knapsack(costs, weights, weight_capacity, sampler=None):
     """Construct BQM and solve the knapsack problem
     
     Args:
@@ -98,6 +98,9 @@ def solve_knapsack(costs, weights, weight_capacity):
             Array of weights associated with the items
         weight_capacity (int):
             Maximum allowable weight
+        sampler (BQM sampler instance or None):
+            A BQM sampler instance or None, in which case
+            LeapHybridSampler is used by default
     
     Returns:
         Tuple:
@@ -106,7 +109,8 @@ def solve_knapsack(costs, weights, weight_capacity):
     """
     bqm = build_knapsack_bqm(costs, weights, weight_capacity)
 
-    sampler = LeapHybridSampler()
+    if sampler is None:
+        sampler = LeapHybridSampler()
 
     sampleset = sampler.sample(bqm)
     sample = sampleset.first.sample
