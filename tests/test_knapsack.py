@@ -17,6 +17,7 @@ import sys
 import unittest
 import pandas as pd
 import re
+import ast
 
 import dimod
 
@@ -77,7 +78,7 @@ class IntegrationTest(unittest.TestCase):
 
         energy = int(float(re.search(r'energy\s+([+-]?\d+(\.\d*)?)', self.output, re.I).group(1)))
         item_indices = re.search(r'item numbers.*:\s*(\[[^]]*\])', self.output, re.I).group(1)
-        self.assertEqual(eval(item_indices), [4, 5, 6])
+        self.assertEqual(ast.literal_eval(item_indices), [4, 5, 6])
         self.assertEqual(energy, -205)
 
 
