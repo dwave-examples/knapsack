@@ -127,7 +127,7 @@ def solve_knapsack(costs, weights, weight_capacity, sampler=None):
             # variable name
             selected_item_indices.append(int(varname[1:]))
 
-    return selected_item_indices, energy
+    return sorted(selected_item_indices), energy
 
 
 if __name__ == '__main__':

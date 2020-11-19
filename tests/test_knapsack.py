@@ -78,6 +78,7 @@ class IntegrationTest(unittest.TestCase):
 
         energy = int(float(re.search(r'energy\s+([+-]?\d+(\.\d*)?)', self.output, re.I).group(1)))
         item_indices = re.search(r'item numbers.*:\s*(\[[^]]*\])', self.output, re.I).group(1)
+        # Note: item indices in the output are sorted
         self.assertEqual(ast.literal_eval(item_indices), [4, 5, 6])
         self.assertEqual(energy, -205)
 
