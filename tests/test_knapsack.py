@@ -15,12 +15,41 @@ import os
 import subprocess
 import sys
 import unittest
+import pandas as pd
+
+import dimod
+
+import knapsack
 
 example_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+class TestExactSolver(unittest.TestCase):
+    """Test problems using the exact solver"""
 
-class TestSmallProblem(unittest.TestCase):
-    """Test the problem defined by small.csv"""
+    def _exact_solver_driver(self, data_file, max_weight, expected_energy, expected_item_indices):
+        """Utility routine to perform a test on the exact solver and compare to expected solution"""
+        sampler = dimod.ExactSolver()
+
+        df = pd.read_csv(data_file, names=['cost', 'weight'])
+
+        selected_item_indices, energy = knapsack.solve_knapsack(df['cost'], df['weight'], max_weight, sampler=sampler)
+
+        self.assertEqual(energy, expected_energy)
+        self.assertEqual(selected_item_indices, expected_item_indices)
+        
+    def test_small_problem(self):
+        """Test the small.csv problem"""
+        data_file_name = os.path.join(example_dir, 'data/small.csv')
+        self._exact_solver_driver(data_file_name, 50, -205, [4, 5, 6])
+
+    def test_very_small_problem(self):
+        """Test the very_small.csv problem"""
+        data_file_name = os.path.join(example_dir, 'data/very_small.csv')
+        self._exact_solver_driver(data_file_name, 10, -10, [0])
+
+
+class IntegrationTest(unittest.TestCase):
+    """Test the main program run as a script using the small.csv data"""
 
     @classmethod
     def setUpClass(cls):
