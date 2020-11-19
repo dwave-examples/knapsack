@@ -16,6 +16,7 @@ import subprocess
 import sys
 import unittest
 import pandas as pd
+import re
 
 import dimod
 
@@ -74,8 +75,8 @@ class IntegrationTest(unittest.TestCase):
     def test_solution(self):
         """Verify that the expected solution is obtained"""
 
-        energy = int(float(self.output.split('\n')[0].split()[-1].strip()))
-        item_indices = self.output.split('\n')[1].split(':')[1]
+        energy = int(float(re.search(r'energy\s+([+-]?\d+(\.\d*)?)', self.output, re.I).group(1)))
+        item_indices = re.search(r'item numbers.*:\s*(\[[^]]*\])', self.output, re.I).group(1)
         self.assertEqual(eval(item_indices), [4, 5, 6])
         self.assertEqual(energy, -205)
 
