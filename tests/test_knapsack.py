@@ -19,9 +19,12 @@ import pandas as pd
 
 import dimod
 
+# Add the parent path so that the test file can be run as a script in
+# addition to using "python -m unittest" from the root directory
+example_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(example_dir)
 import knapsack
 
-example_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class TestExactSolver(unittest.TestCase):
     """Test problems using the exact solver"""
