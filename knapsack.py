@@ -25,7 +25,7 @@ import dimod
 
 def build_knapsack_bqm(costs, weights, weight_capacity):
     """Construct BQM for the knapsack problem
-    
+
     Args:
         costs (array-like):
             Array of costs associated with the items
@@ -33,7 +33,7 @@ def build_knapsack_bqm(costs, weights, weight_capacity):
             Array of weights associated with the items
         weight_capacity (int):
             Maximum allowable weight
-    
+
     Returns:
         Binary quadratic model instance
     """
@@ -90,7 +90,7 @@ def build_knapsack_bqm(costs, weights, weight_capacity):
 
 def solve_knapsack(costs, weights, weight_capacity, sampler=None):
     """Construct BQM and solve the knapsack problem
-    
+
     Args:
         costs (array-like):
             Array of costs associated with the items
@@ -101,7 +101,7 @@ def solve_knapsack(costs, weights, weight_capacity, sampler=None):
         sampler (BQM sampler instance or None):
             A BQM sampler instance or None, in which case
             LeapHybridSampler is used by default
-    
+
     Returns:
         Tuple:
             List of indices of selected items
@@ -112,7 +112,7 @@ def solve_knapsack(costs, weights, weight_capacity, sampler=None):
     if sampler is None:
         sampler = LeapHybridSampler()
 
-    sampleset = sampler.sample(bqm)
+    sampleset = sampler.sample(bqm, label='Example - Knapsack')
     sample = sampleset.first.sample
     energy = sampleset.first.energy
 
