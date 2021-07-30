@@ -15,7 +15,6 @@
 import pandas as pd
 import sys
 from dwave.system import LeapHybridSampler
-from math import log2, floor
 import dimod
 
 # From Andrew Lucas, NP-hard combinatorial problems as Ising spin glasses
@@ -40,7 +39,8 @@ def build_knapsack_bqm(costs, weights, weight_capacity):
 
     # Initialize BQM - use large-capacity BQM so that the problem can be
     # scaled by the user.
-    bqm = dimod.AdjVectorBQM(dimod.Vartype.BINARY)
+    bqm = dimod.BinaryQuadraticModel(dimod.Vartype.BINARY)
+
 
     # Lagrangian multiplier
     # First guess as suggested in Lucas's paper
@@ -49,43 +49,18 @@ def build_knapsack_bqm(costs, weights, weight_capacity):
     # Number of objects
     x_size = len(costs)
 
-    # Lucas's algorithm introduces additional slack variables to
-    # handle the inequality. M+1 binary slack variables are needed to
-    # represent the sum using a set of powers of 2.
-    M = floor(log2(weight_capacity))
-    num_slack_variables = M + 1
-
-    # Slack variable list for Lucas's algorithm. The last variable has
-    # a special value because it terminates the sequence.
-    y = [2**n for n in range(M)]
-    y.append(weight_capacity + 1 - 2**M)
-
-    # Hamiltonian xi-xi terms
+    # set the objective by specifying the linear cofficient of each
+    # variables as the minus of cost
     for k in range(x_size):
-        bqm.set_linear('x' + str(k), lagrange * (weights[k]**2) - costs[k])
+        bqm.set_linear('x' + str(k), - costs[k])
 
-    # Hamiltonian xi-xj terms
-    for i in range(x_size):
-        for j in range(i + 1, x_size):
-            key = ('x' + str(i), 'x' + str(j))
-            bqm.quadratic[key] = 2 * lagrange * weights[i] * weights[j]
-
-    # Hamiltonian y-y terms
-    for k in range(num_slack_variables):
-        bqm.set_linear('y' + str(k), lagrange * (y[k]**2))
-
-    # Hamiltonian yi-yj terms
-    for i in range(num_slack_variables):
-        for j in range(i + 1, num_slack_variables):
-            key = ('y' + str(i), 'y' + str(j))
-            bqm.quadratic[key] = 2 * lagrange * y[i] * y[j]
-
-    # Hamiltonian x-y terms
-    for i in range(x_size):
-        for j in range(num_slack_variables):
-            key = ('x' + str(i), 'y' + str(j))
-            bqm.quadratic[key] = -2 * lagrange * weights[i] * y[j]
-
+    # add the capacity constraint as a linear inequality constraint
+    bqm.add_linear_inequality_constraint(
+        [('x' + str(k), weights[k]) for k in range(x_size)],
+        constant=-weight_capacity,
+        lagrange_multiplier=lagrange,
+        label='weight_capacity'
+    )
     return bqm
 
 def solve_knapsack(costs, weights, weight_capacity, sampler=None):

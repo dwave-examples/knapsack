@@ -1,3 +1,5 @@
 dwave-ocean-sdk>=3.3.0
+dimod>=0.10.4
+dwave-system=>1.7.0
 pandas==1.2.1; python_version>='3.6.1'
 pandas==0.25.3; python_version<'3.6.1'
