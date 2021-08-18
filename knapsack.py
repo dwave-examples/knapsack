@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import click
 import pandas as pd
 import sys
 from dwave.system import LeapHybridSampler
@@ -21,6 +22,7 @@ import dimod
 # From Andrew Lucas, NP-hard combinatorial problems as Ising spin glasses
 # Workshop on Classical and Quantum Optimization; ETH Zuerich - August 20, 2014
 # based on Lucas, Frontiers in Physics _2, 5 (2014)
+
 
 
 def build_knapsack_bqm(costs, weights, weight_capacity):
@@ -88,7 +90,7 @@ def build_knapsack_bqm(costs, weights, weight_capacity):
 
     return bqm
 
-def solve_knapsack(costs, weights, weight_capacity, sampler=None):
+def solve_knapsack(costs, weights, weight_capacity, model, sampler=None):
     """Construct BQM and solve the knapsack problem.
 
     Args:
@@ -107,7 +109,10 @@ def solve_knapsack(costs, weights, weight_capacity, sampler=None):
             List of indices of selected items.
             Solution energy.
     """
-    bqm = build_knapsack_bqm(costs, weights, weight_capacity)
+    if model!='CQM':
+        bqm = build_knapsack_bqm(costs, weights, weight_capacity)
+    else:
+        pass
 
     if sampler is None:
         sampler = LeapHybridSampler()
@@ -129,16 +134,26 @@ def solve_knapsack(costs, weights, weight_capacity, sampler=None):
 
     return sorted(selected_item_indices), energy
 
+@click.command()
+@click.option('--model', default='CQM',
+              help='Set to BQM to build a Binary Quadratic Model.')
+@click.option('--data_file_name', default='data/large.csv',
+              help='Name of data file to run on.')
+@click.option('--weight_capacity', default=70,
+              help='Maximum weight for the container.')
+def main(model, data_file_name, weight_capacity):
 
-if __name__ == '__main__':
+    #data_file_name = sys.argv[1] if len(sys.argv) > 1 else "data/large.csv"
+    #weight_capacity = float(sys.argv[2]) if len(sys.argv) > 2 else 70
 
-    data_file_name = sys.argv[1] if len(sys.argv) > 1 else "data/large.csv"
-    weight_capacity = float(sys.argv[2]) if len(sys.argv) > 2 else 70
 
     # parse input data
     df = pd.read_csv(data_file_name, names=['cost', 'weight'])
 
-    selected_item_indices, energy = solve_knapsack(df['cost'], df['weight'], weight_capacity)
+    selected_item_indices, energy = solve_knapsack(costs=df['cost'],
+                                                   weights=df['weight'],                      weight_capacity=weight_capacity,
+                                                   model=model,
+                                                   sampler=None)
     selected_weights = list(df.loc[selected_item_indices,'weight'])
     selected_costs = list(df.loc[selected_item_indices,'cost'])
 
@@ -146,3 +161,6 @@ if __name__ == '__main__':
     print("Selected item numbers (0-indexed):", selected_item_indices)
     print("Selected item weights: {}, total = {}".format(selected_weights, sum(selected_weights)))
     print("Selected item costs: {}, total = {}".format(selected_costs, sum(selected_costs)))
+
+if __name__ == '__main__':
+    main()
