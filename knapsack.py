@@ -24,23 +24,23 @@ import dimod
 
 
 def build_knapsack_bqm(costs, weights, weight_capacity):
-    """Construct BQM for the knapsack problem
+    """Construct BQM for the knapsack problem.
 
     Args:
         costs (array-like):
-            Array of costs associated with the items
+            Array of costs associated with the items.
         weights (array-like):
-            Array of weights associated with the items
+            Array of weights associated with the items.
         weight_capacity (int):
-            Maximum allowable weight
+            Maximum allowable weight.
 
     Returns:
-        Binary quadratic model instance
+        Binary quadratic model instance.
     """
 
     # Initialize BQM - use large-capacity BQM so that the problem can be
     # scaled by the user.
-    bqm = dimod.AdjVectorBQM(dimod.Vartype.BINARY)
+    bqm = dimod.BQM(dimod.Vartype.BINARY)
 
     # Lagrangian multiplier
     # First guess as suggested in Lucas's paper
@@ -89,23 +89,23 @@ def build_knapsack_bqm(costs, weights, weight_capacity):
     return bqm
 
 def solve_knapsack(costs, weights, weight_capacity, sampler=None):
-    """Construct BQM and solve the knapsack problem
+    """Construct BQM and solve the knapsack problem.
 
     Args:
         costs (array-like):
-            Array of costs associated with the items
+            Array of costs associated with the items.
         weights (array-like):
-            Array of weights associated with the items
+            Array of weights associated with the items.
         weight_capacity (int):
-            Maximum allowable weight
+            Maximum allowable weight.
         sampler (BQM sampler instance or None):
             A BQM sampler instance or None, in which case
-            LeapHybridSampler is used by default
+            LeapHybridSampler is used by default.
 
     Returns:
         Tuple:
-            List of indices of selected items
-            Solution energy
+            List of indices of selected items.
+            Solution energy.
     """
     bqm = build_knapsack_bqm(costs, weights, weight_capacity)
 
