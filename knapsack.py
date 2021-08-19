@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import itertools
 import click
 import pandas as pd
 import sys
@@ -161,23 +162,21 @@ def solve_knapsack(costs, weights, weight_capacity, bqm, sampler=None):
     #
     if bqm:
         sampleset = sampler.sample(qm, label='Example - Knapsack')
+        sample = sampleset.first.sample
+        energy = sampleset.first.energy
     else:
         sampleset = sampler.sample_cqm(qm, label='Example - Knapsack')
+        datum = next(itertools.filterfalse(lambda d: not getattr(d,'is_feasible'),
+                     list(sampleset.data())))
+        sample = datum.sample
+        energy = datum.energy
 
-    sample = sampleset.first.sample
-    energy = sampleset.first.energy
-
+    # Build solution from returned binary variables, where 'x'i==1 includes the item
     selected_item_indices = []
-        # Build solution from returned binary variables:
     for varname, value in sample.items():
-        # For each "x" variable, check whether its value is set, which
-        # indicates that the corresponding item is included in the
-        # knapsack
         if value and varname.startswith('x'):
-            # The index into the weight array is retrieved from the
-            # variable name
             selected_item_indices.append(int(varname[1:]))
-            
+
     return sorted(selected_item_indices), energy
 
 files = os.listdir("data")
