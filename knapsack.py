@@ -15,13 +15,40 @@ import os
 import click
 import pandas as pd
 import sys
-from dwave.system import LeapHybridSampler
+from dwave.system import LeapHybridSampler, LeapHybridCQMSampler
 from math import log2, floor
 import dimod
 
 # From Andrew Lucas, NP-hard combinatorial problems as Ising spin glasses
 # Workshop on Classical and Quantum Optimization; ETH Zuerich - August 20, 2014
 # based on Lucas, Frontiers in Physics _2, 5 (2014)
+def build_knapsack_cqm(costs, weights, weight_capacity):
+    """Construct CQM for the knapsack problem.
+
+    Args:
+        costs (array-like):
+            Array of costs associated with the items.
+        weights (array-like):
+            Array of weights associated with the items.
+        weight_capacity (int):
+            Maximum allowable weight.
+
+    Returns:
+        Constrained quadratic model instance.
+    """
+    num_items = len(costs)
+    cqm = dimod.ConstrainedQuadraticModel()
+    obj = dimod.BinaryQuadraticModel(vartype='BINARY')
+    x = {i: obj.add_variable(f'x_{i}') for i in range(num_items)}
+
+    for i in range(num_items):
+        obj.set_linear(x[i], -costs[i])
+
+    cqm.set_objective(obj)
+    constraint = [(x[i], weights[i]) for i in range(num_items)] + [(-weight_capacity, )]
+    cqm.add_constraint(constraint, sense="<=", label='capacity')
+
+    return cqm
 
 def build_knapsack_bqm(costs, weights, weight_capacity):
     """Construct BQM for the knapsack problem.
@@ -114,20 +141,25 @@ def solve_knapsack(costs, weights, weight_capacity, model, sampler=None):
     if model != 'CQM':
         qm = build_knapsack_bqm(costs, weights, weight_capacity)
     else:
-        pass
+        qm = build_knapsack_cqm(costs, weights, weight_capacity)
 
     if sampler is None:
         if model != 'CQM':
             sampler = LeapHybridSampler()
         else:
-            sampler = LeapHybridCQMSampler()
+            # TODO: remove solver name used to avoid bulk
+            sampler = LeapHybridCQMSampler(solver="hybrid_constrained_quadratic_model_version1_test")
 
-    sampleset = sampler.sample(qm, label='Example - Knapsack')
+    if model != 'CQM':
+        sampleset = sampler.sample(qm, label='Example - Knapsack')
+    else:
+        sampleset = sampler.sample_cqm(qm, label='Example - Knapsack')
+
     sample = sampleset.first.sample
     energy = sampleset.first.energy
 
-    # Build solution from returned binary variables:
     selected_item_indices = []
+        # Build solution from returned binary variables:
     for varname, value in sample.items():
         # For each "x" variable, check whether its value is set, which
         # indicates that the corresponding item is included in the
@@ -135,7 +167,10 @@ def solve_knapsack(costs, weights, weight_capacity, model, sampler=None):
         if value and varname.startswith('x'):
             # The index into the weight array is retrieved from the
             # variable name
-            selected_item_indices.append(int(varname[1:]))
+            if model != 'CQM':
+                selected_item_indices.append(int(varname[1:]))
+            else:
+                selected_item_indices.append(int(varname[2:]))
 
     return sorted(selected_item_indices), energy
 
@@ -157,7 +192,7 @@ def main(model, data_file_name, weight_capacity):
     # parse input data
     df = pd.read_csv(data_file_name, names=['cost', 'weight'])
 
-    Print("Constructing and solving a {}.".format(model))
+    print("Constructing and solving a {}.".format(model))
 
     selected_item_indices, energy = solve_knapsack(costs=df['cost'],
                                                    weights=df['weight'],                     weight_capacity=weight_capacity,
