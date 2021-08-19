@@ -16,13 +16,9 @@ import itertools
 import click
 import pandas as pd
 import sys
-from dwave.system import LeapHybridSampler, LeapHybridCQMSampler
-from math import log2, floor
+from dwave.system import LeapHybridCQMSampler
 import dimod
 
-# From Andrew Lucas, NP-hard combinatorial problems as Ising spin glasses
-# Workshop on Classical and Quantum Optimization; ETH Zuerich - August 20, 2014
-# based on Lucas, Frontiers in Physics _2, 5 (2014)
 def build_knapsack_cqm(costs, weights, weight_capacity):
     """Construct a CQM for the knapsack problem.
 
@@ -52,66 +48,7 @@ def build_knapsack_cqm(costs, weights, weight_capacity):
 
     return cqm
 
-def build_knapsack_bqm(costs, weights, weight_capacity):
-    """Construct a BQM for the knapsack problem.
-
-    Args:
-        costs (array-like):
-            Array of costs associated with the items.
-        weights (array-like):
-            Array of weights associated with the items.
-        weight_capacity (int):
-            Maximum allowable weight.
-
-    Returns:
-        Binary quadratic model instance.
-    """
-
-    bqm = dimod.BQM(dimod.Vartype.BINARY)
-
-
-    lagrange = max(costs)   # Lagrangian multiplier as suggested in Lucas's paper
-    x_size = len(costs)     # Number of objects
-
-    # Lucas's algorithm introduces M+1 binary slack variables to
-    # handle the inequality, with the sum represented as a set of powers of 2.
-    M = floor(log2(weight_capacity))
-    num_slack_variables = M + 1
-
-    # The last slack variable in the list has
-    # a special value because it terminates the sequence.
-    y = [2**n for n in range(M)]
-    y.append(weight_capacity + 1 - 2**M)
-
-    # Hamiltonian xi-xi terms
-    for k in range(x_size):
-        bqm.set_linear('x' + str(k), lagrange * (weights[k]**2) - costs[k])
-
-    # Hamiltonian xi-xj terms
-    for i in range(x_size):
-        for j in range(i + 1, x_size):
-            key = ('x' + str(i), 'x' + str(j))
-            bqm.quadratic[key] = 2 * lagrange * weights[i] * weights[j]
-
-    # Hamiltonian y-y terms
-    for k in range(num_slack_variables):
-        bqm.set_linear('y' + str(k), lagrange * (y[k]**2))
-
-    # Hamiltonian yi-yj terms
-    for i in range(num_slack_variables):
-        for j in range(i + 1, num_slack_variables):
-            key = ('y' + str(i), 'y' + str(j))
-            bqm.quadratic[key] = 2 * lagrange * y[i] * y[j]
-
-    # Hamiltonian x-y terms
-    for i in range(x_size):
-        for j in range(num_slack_variables):
-            key = ('x' + str(i), 'y' + str(j))
-            bqm.quadratic[key] = -2 * lagrange * weights[i] * y[j]
-
-    return bqm
-
-def solve_knapsack(costs, weights, weight_capacity, bqm, sampler=None):
+def solve_knapsack(costs, weights, weight_capacity, sampler=None):
     """Construct a quadratic model and solve the knapsack problem.
 
     Args:
@@ -121,10 +58,6 @@ def solve_knapsack(costs, weights, weight_capacity, bqm, sampler=None):
             Array of weights associated with the items.
         weight_capacity (int):
             Maximum allowable weight.
-        model (str):
-            Selects whether to construct a constrained quadratic model (CQM) or
-            binary quadratic model (BQM), and then solve using the appropriate
-            sampler.
         sampler (BQM sampler instance or None):
             A sampler instance or None, in which case LeapHybridCQMSampler is used
             by default for CQMs and LeapHybridSampler for BQMs.
@@ -134,47 +67,22 @@ def solve_knapsack(costs, weights, weight_capacity, bqm, sampler=None):
             List of indices of selected items.
             Solution energy.
     """
-    build_knapsack = {'bqm': build_knapsack_bqm, 'cqm': build_knapsack_cqm}
-    default_sampler = {'bqm': LeapHybridSampler(solver="hybrid_binary_quadratic_model_version2p_test"),
-                       'cqm': LeapHybridCQMSampler(solver="hybrid_constrained_quadratic_model_version1_test")}
-
-    model = 'cqm'
-    if bqm:
-        model = 'bqm'
-
-    qm = build_knapsack[model](costs, weights, weight_capacity)
+    cqm = build_knapsack_cqm(costs, weights, weight_capacity)
 
     if sampler is None:
-        sampler = default_sampler[model]
+        sampler = LeapHybridCQMSampler(solver="hybrid_constrained_quadratic_model_version1_test")
 
-    # if bqm:
-    #     qm = build_knapsack_bqm(costs, weights, weight_capacity)
-    # else:
-    #     qm = build_knapsack_cqm(costs, weights, weight_capacity)
-    #
-    # if sampler is None:
-    #     if bqm:
-    #         # TODO: remove solver name used to avoid bulk
-    #         sampler = LeapHybridSampler(solver="hybrid_binary_quadratic_model_version2p_test")
-    #     else:
-    #         # TODO: remove solver name used to avoid bulk
-    #         sampler = LeapHybridCQMSampler(solver="hybrid_constrained_quadratic_model_version1_test")
-    #
-    if bqm:
-        sampleset = sampler.sample(qm, label='Example - Knapsack')
-        sample = sampleset.first.sample
-        energy = sampleset.first.energy
-    else:
-        sampleset = sampler.sample_cqm(qm, label='Example - Knapsack')
-        datum = next(itertools.filterfalse(lambda d: not getattr(d,'is_feasible'),
-                     list(sampleset.data())))
-        sample = datum.sample
-        energy = datum.energy
+    sampleset = sampler.sample_cqm(cqm, label='Example - Knapsack')
+    # .first() method returns lowest energy but that solution might be infeasible
+    best = next(itertools.filterfalse(lambda d: not getattr(d,'is_feasible'),
+                list(sampleset.data())))
+    sample = best.sample
+    energy = best.energy
 
     # Build solution from returned binary variables, where 'x'i==1 includes the item
     selected_item_indices = []
     for varname, value in sample.items():
-        if value and varname.startswith('x'):
+        if value:
             selected_item_indices.append(int(varname[1:]))
 
     return sorted(selected_item_indices), energy
@@ -182,24 +90,17 @@ def solve_knapsack(costs, weights, weight_capacity, bqm, sampler=None):
 files = os.listdir("data")
 
 @click.command()
-@click.option('--bqm', is_flag=True,
-              help='Set to build and solve a binary quadratic model. By default \
-builds a constrained quadratic model.')
 @click.option('--data_file_name', default='data/large.csv',
-              help='Name of data file to run on. One of:' + str(files))
+              help='Name of data file to run on. One of:' + str(files).replace(",", "\n"))
 @click.option('--weight_capacity', default=70,
               help='Maximum weight for the container.')
-def main(bqm, data_file_name, weight_capacity):
-
-    #data_file_name = sys.argv[1] if len(sys.argv) > 1 else "data/large.csv"
-    #weight_capacity = float(sys.argv[2]) if len(sys.argv) > 2 else 70
+def main(data_file_name, weight_capacity):
 
     # parse input data
     df = pd.read_csv(data_file_name, names=['cost', 'weight'])
 
     selected_item_indices, energy = solve_knapsack(costs=df['cost'],
                                                    weights=df['weight'],                     weight_capacity=weight_capacity,
-                                                   bqm=bqm,
                                                    sampler=None)
     selected_weights = list(df.loc[selected_item_indices,'weight'])
     selected_costs = list(df.loc[selected_item_indices,'cost'])
