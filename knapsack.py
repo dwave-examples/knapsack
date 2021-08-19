@@ -15,7 +15,6 @@ import os
 import itertools
 import click
 import pandas as pd
-import sys
 from dwave.system import LeapHybridCQMSampler
 from dimod import ConstrainedQuadraticModel, BinaryQuadraticModel
 
@@ -34,22 +33,25 @@ def build_knapsack_cqm(costs, weights, weight_capacity):
         Constrained quadratic model instance.
     """
     num_items = len(costs)
+    print("Building a CQM for {} items.".format(str(num_items)))
 
     cqm = ConstrainedQuadraticModel()
     obj = BinaryQuadraticModel(vartype='BINARY')
 
-    x = {i: obj.add_variable(f'x{i}') for i in range(num_items)}
+    # Objective is to maximize the total costs
     for i in range(num_items):
-        obj.set_linear(x[i], -costs[i])
+        obj.add_variable(i)
+        obj.set_linear(i, -costs[i])
     cqm.set_objective(obj)
 
-    constraint = [(x[i], weights[i]) for i in range(num_items)] + [(-weight_capacity, )]
-    cqm.add_constraint(constraint, sense="<=", label='capacity')
+    # Constraint is that the sum of all items' weights be up to maximum capacity
+    constraint = [(i, weights[i]) for i in range(num_items)]
+    cqm.add_constraint(constraint, sense="<=", rhs=weight_capacity, label='capacity')
 
     return cqm
 
 def solve_knapsack(costs, weights, weight_capacity, sampler=None):
-    """Construct a quadratic model and solve the knapsack problem.
+    """Construct a CQM for, and solve, the knapsack problem.
 
     Args:
         costs (array-like):
@@ -73,42 +75,36 @@ def solve_knapsack(costs, weights, weight_capacity, sampler=None):
         # TODO: remove filtering on block solver
         sampler = LeapHybridCQMSampler(solver="hybrid_constrained_quadratic_model_version1_test")
 
+    print("Submitting CQM to solver {}.".format(sampler.solver.name))
     sampleset = sampler.sample_cqm(cqm, label='Example - Knapsack')
     # .first() method returns lowest energy but that solution might be infeasible
     best = next(itertools.filterfalse(lambda d: not getattr(d,'is_feasible'),
                 list(sampleset.data())))
-    sample = best.sample
-    energy = best.energy
 
-    # Build solution from returned binary variables, where 'x'i==1 includes the item
-    selected_item_indices = []
-    for varname, value in sample.items():
-        if value:
-            selected_item_indices.append(int(varname[1:]))
+    selected_item_indices = [key for key, val in best.sample.items() if val==1.0]
 
-    return sorted(selected_item_indices), energy
+    return sorted(selected_item_indices), best.energy
 
-# Format the help display
-files = os.listdir("data")
-file_help = """
+# Format the help display ("\b" enables newlines in click() help text)
+datafiles = os.listdir("data")
+datafile_help = """
 Name of data file (under the data\ folder) to run on. One of:\n
 File Name \t\t Total weight\n
 \b
 """
-for file in files:
+for file in datafiles:
     df = pd.read_csv("data/" + file, names=['cost', 'weight'])
-    file_help += str(file) + "\t\t" + str(sum(df['weight'])) + "\n"
-file_help += "\nDefault is to run on data/large.csv."
+    datafile_help += str(file) + "\t\t" + str(sum(df['weight'])) + "\n"
+datafile_help += "\nDefault is to run on data/large.csv."
 
 @click.command()
 @click.option('--data_file_name', default='data/large.csv',
-              help=file_help)
+              help=datafile_help)
 @click.option('--weight_capacity', default=None,
               help="Maximum weight for the container. By default sets 80% of the total.")
 def main(data_file_name, weight_capacity):
     """Solve a knapsack problem using a CQM solver."""
 
-    # parse input data
     df = pd.read_csv(data_file_name, names=['cost', 'weight'])
 
     if not weight_capacity:
@@ -121,10 +117,10 @@ def main(data_file_name, weight_capacity):
     selected_weights = list(df.loc[selected_item_indices,'weight'])
     selected_costs = list(df.loc[selected_item_indices,'cost'])
 
-    print("Found solution at energy {}".format(energy))
-    print("Selected item numbers (0-indexed):", selected_item_indices)
-    print("Selected item weights: {}, total = {}".format(selected_weights, sum(selected_weights)))
-    print("Selected item costs: {}, total = {}".format(selected_costs, sum(selected_costs)))
+    print("\nFound best solution at energy {}".format(energy))
+    print("\nSelected item numbers (0-indexed):", selected_item_indices)
+    print("\nSelected item weights: {}, total = {}".format(selected_weights, sum(selected_weights)))
+    print("\nSelected item costs: {}, total = {}".format(selected_costs, sum(selected_costs)))
 
 if __name__ == '__main__':
     main()
