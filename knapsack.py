@@ -33,7 +33,7 @@ def build_knapsack_cqm(costs, weights, weight_capacity):
         Constrained quadratic model instance.
     """
     num_items = len(costs)
-    print("Building a CQM for {} items.".format(str(num_items)))
+    print("\nBuilding a CQM for {} items.".format(str(num_items)))
 
     cqm = ConstrainedQuadraticModel()
     obj = BinaryQuadraticModel(vartype='BINARY')
