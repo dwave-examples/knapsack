@@ -17,7 +17,7 @@ import click
 import pandas as pd
 import sys
 from dwave.system import LeapHybridCQMSampler
-import dimod
+from dimod import ConstrainedQuadraticModel, BinaryQuadraticModel
 
 def build_knapsack_cqm(costs, weights, weight_capacity):
     """Construct a CQM for the knapsack problem.
@@ -35,8 +35,8 @@ def build_knapsack_cqm(costs, weights, weight_capacity):
     """
     num_items = len(costs)
 
-    cqm = dimod.ConstrainedQuadraticModel()
-    obj = dimod.BinaryQuadraticModel(vartype='BINARY')
+    cqm = ConstrainedQuadraticModel()
+    obj = BinaryQuadraticModel(vartype='BINARY')
 
     x = {i: obj.add_variable(f'x{i}') for i in range(num_items)}
     for i in range(num_items):
@@ -70,6 +70,7 @@ def solve_knapsack(costs, weights, weight_capacity, sampler=None):
     cqm = build_knapsack_cqm(costs, weights, weight_capacity)
 
     if sampler is None:
+        # TODO: remove filtering on block solver
         sampler = LeapHybridCQMSampler(solver="hybrid_constrained_quadratic_model_version1_test")
 
     sampleset = sampler.sample_cqm(cqm, label='Example - Knapsack')
@@ -87,17 +88,32 @@ def solve_knapsack(costs, weights, weight_capacity, sampler=None):
 
     return sorted(selected_item_indices), energy
 
+# Format the help display
 files = os.listdir("data")
+file_help = """
+Name of data file (under the data\ folder) to run on. One of:\n
+File Name \t\t Total weight\n
+\b
+"""
+for file in files:
+    df = pd.read_csv("data/" + file, names=['cost', 'weight'])
+    file_help += str(file) + "\t\t" + str(sum(df['weight'])) + "\n"
+file_help += "\nDefault is to run on data/large.csv."
 
 @click.command()
 @click.option('--data_file_name', default='data/large.csv',
-              help='Name of data file to run on. One of:' + str(files).replace(",", "\n"))
-@click.option('--weight_capacity', default=70,
-              help='Maximum weight for the container.')
+              help=file_help)
+@click.option('--weight_capacity', default=None,
+              help="Maximum weight for the container. By default sets 80% of the total.")
 def main(data_file_name, weight_capacity):
+    """Solve a knapsack problem using a CQM solver."""
 
     # parse input data
     df = pd.read_csv(data_file_name, names=['cost', 'weight'])
+
+    if not weight_capacity:
+        weight_capacity = int(0.8 * sum(df['weight']))
+        print("Setting weight capacity to 80% of total: {}".format(str(weight_capacity)))
 
     selected_item_indices, energy = solve_knapsack(costs=df['cost'],
                                                    weights=df['weight'],                     weight_capacity=weight_capacity,
