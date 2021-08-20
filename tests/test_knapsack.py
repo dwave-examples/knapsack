@@ -15,8 +15,16 @@ import os
 import sys
 import unittest
 import subprocess
-import pandas as pd
-import dimod
+
+from knapsack import build_knapsack_cqm
+
+class TestBuildCQM(unittest.TestCase):
+    """Verify correct construction of CQM for very_small.csv data with weight 10."""
+    def test_build_cqm1(self):
+        cqm = build_knapsack_cqm([10, 1], [5, 7], 10)
+        self.assertEqual(cqm.objective.linear, {0: -10.0, 1: -1.0})
+        self.assertEqual(cqm.constraints["capacity"].lhs.linear, {0: 5.0, 1: 7.0})
+        self.assertEqual(cqm.constraints["capacity"].rhs, 10)
 
 class TestIntegration(unittest.TestCase):
     @unittest.skipIf(os.getenv('SKIP_INT_TESTS'), "Skipping integration test.")
@@ -36,4 +44,4 @@ class TestIntegration(unittest.TestCase):
         self.assertIn('selected item numbers', output)
         self.assertIn('selected item weights', output)
         self.assertIn('selected item costs', output)
-        self.assertNotIn('Traceback', output)
+        self.assertNotIn('traceback', output)
