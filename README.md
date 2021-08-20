@@ -7,16 +7,15 @@
 The [knapsack problem](https://en.wikipedia.org/wiki/Knapsack_problem) is a
 well-known optimization problem. It is encountered, for example, in packing
 shipping containers. A shipping container has a weight capacity which it can hold.
-Given a collection of objects to be shipped, where each object has a value and a
-weight, the problem is to select the optimal objects to pack in the shipping
+Given a collection of items to be shipped, where each item has a value and a
+weight, the problem is to select the optimal items to pack in the shipping
 container. This optimization problem can be defined as an objective with a constraint:
 
-* **Objective:** Maximize the sum total of the values of the objects packed in
-  the container.
-* **Constraint:** The total weight of the selected objects must be less than or
-  equal to the container's capacity.
+* **Objective:** Maximize freight value (sum of values of the selected items).
+* **Constraint:** Total freight weight (sum of weights of the selected items) must
+  be less than or equal to the container's capacity.
 
-This example solves a knapsack problem on a D-Wave solver by reformulating it as
+This example solves such a knapsack problem by reformulating it as
 a constrained quadratic model (CQM) and submitting it to a Leap hybrid CQM solver.
 
 ## Usage
@@ -27,32 +26,33 @@ To run the default demo, enter the command:
 python knapsack.py
 ```
 
-To view the available options, enter the command:
+To view available options, enter the command:
 
 ```bash
 python knapsack.py --help
 ```
 
 Command-line arguments let you select one of several data sets (under the `/data`
-folder) and set the maximum weight. The data files are formulated as rows of
-objects, each defined as a pair of weight and value.  
+folder) and set the freight capacity. The data files are formulated as rows of
+items, each defined as a pair of weight and value.  
 
 ## Code Overview
 
-The code in `knapsack.py` includes two main functions:
+The code in `knapsack.py` includes three main functions:
 
 * `build_knapsack_cqm()` creates a CQM by setting an objective and constraint as
   follows:
 
   - Objective: Binary variables are created for each item, and assigned a linear
-    bias equal to the negative value of the item's cost. To minimize this objective
-    is equivalent to maximizing the total cost of the items. Solutions set a value
-    of 1 to selected items and 0 to unselected items.
-  - Constraint: A constraint is created as quadratic model that sets the linear
-    biases of the previously created binary variables equal to the weight of each
-    item and requires the total to be up to the container's capacity.
-* `solve_knapsack()` calls the `build_knapsack_cqm()`, submits the generated CQM
-  to a Leap hybrid CQM solver, and parses and displays the results.
+    bias equal to the negative value of the item's value. To minimize this objective,
+    by selecting an optimal set of items, is equivalent to maximizing the total
+    value of the freight. Solutions set a value of 1 to selected items and 0 to
+    unselected items.
+  - Constraint: A quadratic model with the previously created binary variables,
+    where the linear biases are set equal to the weight of each item, is created
+    with the requirement that the total weight no exceed the container's capacity.
+* `parse_inputs()` is a utility function that reads data from the example files.
+* `parse_solution()` parses and displays the results returned from the solver.
 
 ## License
 
