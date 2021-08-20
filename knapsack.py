@@ -18,6 +18,25 @@ import pandas as pd
 from dwave.system import LeapHybridCQMSampler
 from dimod import ConstrainedQuadraticModel, BinaryQuadraticModel
 
+def parse_inputs(data_file, weight):
+    """Parse user input and files for data to build CQM.
+
+    Args:
+        data_file (csv file): File to run on.
+
+        weight (int): Capacity of container.
+
+    Returns:
+        Costs, weights, and capacity.
+    """
+    df = pd.read_csv(data_file, names=['cost', 'weight'])
+
+    if not weight:
+        weight = int(0.8 * sum(df['weight']))
+        print("Setting weight capacity to 80% of total: {}".format(str(weight)))
+
+    return df['cost'], df['weight'], weight
+
 def build_knapsack_cqm(costs, weights, weight_capacity):
     """Construct a CQM for the knapsack problem.
 
@@ -50,40 +69,29 @@ def build_knapsack_cqm(costs, weights, weight_capacity):
 
     return cqm
 
-def solve_knapsack(costs, weights, weight_capacity, sampler=None):
-    """Construct a CQM for, and solve, the knapsack problem.
+def parse_solution(sampleset, data_file):
+    """Translate the sampleset returned from solver to knapsack items.
 
     Args:
-        costs (array-like):
-            Array of costs associated with the items.
-        weights (array-like):
-            Array of weights associated with the items.
-        weight_capacity (int):
-            Maximum allowable weight.
-        sampler (BQM sampler instance or None):
-            A sampler instance or None, in which case LeapHybridCQMSampler is used
-            by default for CQMs and LeapHybridSampler for BQMs.
 
-    Returns:
-        Tuple:
-            List of indices of selected items.
-            Solution energy.
+        sampleset (dimod.Sampleset): Samples returned from the solver.
+
+        data_file (csv file): File to run on.
     """
-    cqm = build_knapsack_cqm(costs, weights, weight_capacity)
+    df = pd.read_csv(data_file, names=['cost', 'weight'])
 
-    if sampler is None:
-        # TODO: remove filtering on block solver
-        sampler = LeapHybridCQMSampler(solver="hybrid_constrained_quadratic_model_version1_test")
-
-    print("Submitting CQM to solver {}.".format(sampler.solver.name))
-    sampleset = sampler.sample_cqm(cqm, label='Example - Knapsack')
-    # .first() method returns lowest energy but that solution might be infeasible
     best = next(itertools.filterfalse(lambda d: not getattr(d,'is_feasible'),
                 list(sampleset.data())))
 
     selected_item_indices = [key for key, val in best.sample.items() if val==1.0]
 
-    return sorted(selected_item_indices), best.energy
+    selected_weights = list(df.loc[selected_item_indices,'weight'])
+    selected_costs = list(df.loc[selected_item_indices,'cost'])
+
+    print("\nFound best solution at energy {}".format(best.energy))
+    print("\nSelected item numbers (0-indexed):", selected_item_indices)
+    print("\nSelected item weights: {}, total = {}".format(selected_weights, sum(selected_weights)))
+    print("\nSelected item costs: {}, total = {}".format(selected_costs, sum(selected_costs)))
 
 # Format the help display ("\b" enables newlines in click() help text)
 datafiles = os.listdir("data")
@@ -105,22 +113,16 @@ datafile_help += "\nDefault is to run on data/large.csv."
 def main(data_file_name, weight_capacity):
     """Solve a knapsack problem using a CQM solver."""
 
-    df = pd.read_csv(data_file_name, names=['cost', 'weight'])
+    sampler = LeapHybridCQMSampler(solver="hybrid_constrained_quadratic_model_version1_test")
 
-    if not weight_capacity:
-        weight_capacity = int(0.8 * sum(df['weight']))
-        print("Setting weight capacity to 80% of total: {}".format(str(weight_capacity)))
+    costs, weights, capacity = parse_inputs(data_file_name, weight_capacity)
 
-    selected_item_indices, energy = solve_knapsack(costs=df['cost'],
-                                                   weights=df['weight'],                     weight_capacity=weight_capacity,
-                                                   sampler=None)
-    selected_weights = list(df.loc[selected_item_indices,'weight'])
-    selected_costs = list(df.loc[selected_item_indices,'cost'])
+    cqm = build_knapsack_cqm(costs, weights, capacity)
 
-    print("\nFound best solution at energy {}".format(energy))
-    print("\nSelected item numbers (0-indexed):", selected_item_indices)
-    print("\nSelected item weights: {}, total = {}".format(selected_weights, sum(selected_weights)))
-    print("\nSelected item costs: {}, total = {}".format(selected_costs, sum(selected_costs)))
+    print("Submitting CQM to solver {}.".format(sampler.solver.name))
+    sampleset = sampler.sample_cqm(cqm, label='Example - Knapsack')
+
+    parse_solution(sampleset, data_file_name)
 
 if __name__ == '__main__':
     main()
