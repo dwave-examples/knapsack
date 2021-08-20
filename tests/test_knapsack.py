@@ -15,8 +15,13 @@ import os
 import sys
 import unittest
 import subprocess
+import numpy as np
+from io import StringIO
+from contextlib import redirect_stdout
+from knapsack import build_knapsack_cqm, parse_inputs, parse_solution
+import dimod
 
-from knapsack import build_knapsack_cqm
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class TestBuildCQM(unittest.TestCase):
     """Verify correct construction of CQM for very_small.csv data with weight 10."""
@@ -25,6 +30,16 @@ class TestBuildCQM(unittest.TestCase):
         self.assertEqual(cqm.objective.linear, {0: -10.0, 1: -1.0})
         self.assertEqual(cqm.constraints["capacity"].lhs.linear, {0: 5.0, 1: 7.0})
         self.assertEqual(cqm.constraints["capacity"].rhs, 10)
+
+class TestParsing(unittest.TestCase):
+    """Verify input and output handling."""
+    def test_parse_input1(self):
+        file1 = os.path.join(root_dir, "data", "small.csv")
+        costs, weights, capacity = parse_inputs(file1, 10)
+
+        self.assertEqual(capacity, 10)
+        self.assertEqual(sum(costs), 405)
+        self.assertEqual(sum(weights), 112)
 
 class TestIntegration(unittest.TestCase):
     @unittest.skipIf(os.getenv('SKIP_INT_TESTS'), "Skipping integration test.")
