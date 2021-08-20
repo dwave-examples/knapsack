@@ -18,38 +18,39 @@ import pandas as pd
 from dwave.system import LeapHybridCQMSampler
 from dimod import ConstrainedQuadraticModel, BinaryQuadraticModel
 
-def parse_inputs(data_file, weight):
+def parse_inputs(data_file, capacity):
     """Parse user input and files for data to build CQM.
 
     Args:
-        data_file (csv file): File to run on.
-
-        weight (int): Capacity of container.
+        data_file (csv file):
+            File of items (weight & cost) slated to ship.
+        capacity (int):
+            Max weight the shipping container can accept.
 
     Returns:
         Costs, weights, and capacity.
     """
     df = pd.read_csv(data_file, names=['cost', 'weight'])
 
-    if not weight:
-        weight = int(0.8 * sum(df['weight']))
-        print("Setting weight capacity to 80% of total: {}".format(str(weight)))
+    if not capacity:
+        capacity = int(0.8 * sum(df['weight']))
+        print("\nSetting weight capacity to 80% of total: {}".format(str(capacity)))
 
-    return df['cost'], df['weight'], weight
+    return df['cost'], df['weight'], capacity
 
-def build_knapsack_cqm(costs, weights, weight_capacity):
+def build_knapsack_cqm(costs, weights, max_weight):
     """Construct a CQM for the knapsack problem.
 
     Args:
         costs (array-like):
-            Array of costs associated with the items.
+            Array of costs for the items.
         weights (array-like):
-            Array of weights associated with the items.
-        weight_capacity (int):
-            Maximum allowable weight.
+            Array of weights for the items.
+        max_weight (int):
+            Maximum allowable weight for the knapsack.
 
     Returns:
-        Constrained quadratic model instance.
+        Constrained quadratic model instance that represents the knapsack problem.
     """
     num_items = len(costs)
     print("\nBuilding a CQM for {} items.".format(str(num_items)))
@@ -63,30 +64,33 @@ def build_knapsack_cqm(costs, weights, weight_capacity):
         obj.set_linear(i, -costs[i])
     cqm.set_objective(obj)
 
-    # Constraint is that the sum of all items' weights be up to maximum capacity
+    # Constraint is to keep the sum of items' weights under or equal capacity
     constraint = [(i, weights[i]) for i in range(num_items)]
-    cqm.add_constraint(constraint, sense="<=", rhs=weight_capacity, label='capacity')
+    cqm.add_constraint(constraint, sense="<=", rhs=max_weight, label='capacity')
 
     return cqm
 
-def parse_solution(sampleset, data_file):
-    """Translate the sampleset returned from solver to knapsack items.
+def parse_solution(sampleset, costs, weights):
+    """Translate the best sample returned from solver to shipped items.
 
     Args:
 
-        sampleset (dimod.Sampleset): Samples returned from the solver.
-
-        data_file (csv file): File to run on.
+        sampleset (dimod.Sampleset):
+            Samples returned from the solver.
+        costs (array-like):
+            Array of costs for the items.
+        weights (array-like):
+            Array of weights for the items.
     """
-    df = pd.read_csv(data_file, names=['cost', 'weight'])
+    if not any(sampleset.record["is_feasible"]):
+        raise ValueError("No feasible solution found")
 
     best = next(itertools.filterfalse(lambda d: not getattr(d,'is_feasible'),
                 list(sampleset.data())))
 
     selected_item_indices = [key for key, val in best.sample.items() if val==1.0]
-
-    selected_weights = list(df.loc[selected_item_indices,'weight'])
-    selected_costs = list(df.loc[selected_item_indices,'cost'])
+    selected_weights = list(weights.loc[selected_item_indices])
+    selected_costs = list(costs.loc[selected_item_indices])
 
     print("\nFound best solution at energy {}".format(best.energy))
     print("\nSelected item numbers (0-indexed):", selected_item_indices)
@@ -96,7 +100,7 @@ def parse_solution(sampleset, data_file):
 # Format the help display ("\b" enables newlines in click() help text)
 datafiles = os.listdir("data")
 datafile_help = """
-Name of data file (under the data\ folder) to run on. One of:\n
+Name of data file (under the 'data/' folder) to run on. One of:\n
 File Name \t\t Total weight\n
 \b
 """
@@ -106,23 +110,23 @@ for file in datafiles:
 datafile_help += "\nDefault is to run on data/large.csv."
 
 @click.command()
-@click.option('--data_file_name', default='data/large.csv',
+@click.option('--filename', default='data/large.csv',
               help=datafile_help)
-@click.option('--weight_capacity', default=None,
-              help="Maximum weight for the container. By default sets 80% of the total.")
-def main(data_file_name, weight_capacity):
+@click.option('--capacity', default=None,
+              help="Maximum weight for the container. By default sets to 80% of the total.")
+def main(filename, capacity):
     """Solve a knapsack problem using a CQM solver."""
 
     sampler = LeapHybridCQMSampler(solver="hybrid_constrained_quadratic_model_version1_test")
 
-    costs, weights, capacity = parse_inputs(data_file_name, weight_capacity)
+    costs, weights, capacity = parse_inputs(filename, capacity)
 
     cqm = build_knapsack_cqm(costs, weights, capacity)
 
     print("Submitting CQM to solver {}.".format(sampler.solver.name))
     sampleset = sampler.sample_cqm(cqm, label='Example - Knapsack')
 
-    parse_solution(sampleset, data_file_name)
+    parse_solution(sampleset, costs, weights)
 
 if __name__ == '__main__':
     main()
