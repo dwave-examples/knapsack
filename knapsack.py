@@ -117,7 +117,7 @@ datafile_help += "\nDefault is to run on data/large.csv."
 def main(filename, capacity):
     """Solve a knapsack problem using a CQM solver."""
 
-    sampler = LeapHybridCQMSampler(solver="hybrid_constrained_quadratic_model_version1_test")
+    sampler = LeapHybridCQMSampler()
 
     costs, weights, capacity = parse_inputs(filename, capacity)
 
