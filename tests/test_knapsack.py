@@ -19,9 +19,14 @@ import numpy as np
 from io import StringIO
 from contextlib import redirect_stdout
 from knapsack import build_knapsack_cqm, parse_inputs, parse_solution
-import dimod
+from dimod import SampleSet, as_samples, append_data_vectors
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def redirect_output(sampleset, costs, weights):
+    with redirect_stdout(StringIO()) as f:
+        parse_solution(sampleset, costs, weights)
+    return f.getvalue()
 
 class TestBuildCQM(unittest.TestCase):
     """Verify correct construction of CQM for very_small.csv data with weight 10."""
@@ -40,6 +45,26 @@ class TestParsing(unittest.TestCase):
         self.assertEqual(capacity, 10)
         self.assertEqual(sum(costs), 405)
         self.assertEqual(sum(weights), 112)
+
+    def test_parse_ouput1(self):
+        file1 = os.path.join(root_dir, "data", "small.csv")
+        costs, weights, capacity = parse_inputs(file1, 10)
+        samples = np.asarray([[1., 0., 1., 0., 0., 1., 0.], [0., 0., 0., 0., 0., 1., 0.],
+                               [0., 1., 0., 0., 0., 1., 0.], [0., 0., 1., 0., 0., 1., 0.]])
+        sampleset = SampleSet.from_samples(samples, 'BINARY', [-10, -11, -8, -9])
+        sampleset_infeasible = append_data_vectors(sampleset, is_feasible=[False]*4)
+
+        # Verify error for infeasible constraint input
+        with self.assertRaises(ValueError):
+            s = redirect_output(sampleset_infeasible, costs, weights)
+
+        sampleset_feasible = append_data_vectors(sampleset,
+                                        is_feasible=[False, True, False, True])
+        s = redirect_output(sampleset_feasible, costs, weights)
+        self.assertIn('Found best solution at energy -11', s)
+        self.assertIn('Selected item numbers (0-indexed): [5]', s)
+        self.assertIn('Selected item weights: [10]', s)
+        self.assertIn('Selected item costs: [80]', s)
 
 class TestIntegration(unittest.TestCase):
     @unittest.skipIf(os.getenv('SKIP_INT_TESTS'), "Skipping integration test.")
