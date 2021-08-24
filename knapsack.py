@@ -16,7 +16,7 @@ import itertools
 import click
 import pandas as pd
 from dwave.system import LeapHybridCQMSampler
-from dimod import ConstrainedQuadraticModel, BinaryQuadraticModel
+from dimod import ConstrainedQuadraticModel, BinaryQuadraticModel, QuadraticModel
 
 def parse_inputs(data_file, capacity):
     """Parse user input and files for data to build CQM.
@@ -57,15 +57,17 @@ def build_knapsack_cqm(costs, weights, max_weight):
 
     cqm = ConstrainedQuadraticModel()
     obj = BinaryQuadraticModel(vartype='BINARY')
+    constraint = QuadraticModel()
 
-    # Objective is to maximize the total costs
     for i in range(num_items):
+        # Objective is to maximize the total costs
         obj.add_variable(i)
         obj.set_linear(i, -costs[i])
-    cqm.set_objective(obj)
+        # Constraint is to keep the sum of items' weights under or equal capacity
+        constraint.add_variable('BINARY', i)
+        constraint.set_linear(i, weights[i])
 
-    # Constraint is to keep the sum of items' weights under or equal capacity
-    constraint = [(i, weights[i]) for i in range(num_items)]
+    cqm.set_objective(obj)
     cqm.add_constraint(constraint, sense="<=", rhs=max_weight, label='capacity')
 
     return cqm
