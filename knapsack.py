@@ -112,7 +112,7 @@ for file in datafiles:
 datafile_help += "\nDefault is to run on data/large.csv."
 
 @click.command()
-@click.option('--filename', default='data/large.csv',
+@click.option('--filename', type=click.File(), default='data/large.csv',
               help=datafile_help)
 @click.option('--capacity', default=None,
               help="Maximum weight for the container. By default sets to 80% of the total.")
