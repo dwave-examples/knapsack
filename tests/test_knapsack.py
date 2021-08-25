@@ -15,11 +15,11 @@ import os
 import sys
 import unittest
 import subprocess
-import numpy as np
 from io import StringIO
 from contextlib import redirect_stdout
+import numpy as np
+from dimod import SampleSet, append_data_vectors
 from knapsack import build_knapsack_cqm, parse_inputs, parse_solution
-from dimod import SampleSet, as_samples, append_data_vectors
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
