@@ -99,22 +99,37 @@ def parse_solution(sampleset, costs, weights):
     print("\nSelected item weights: {}, total = {}".format(selected_weights, sum(selected_weights)))
     print("\nSelected item costs: {}, total = {}".format(selected_costs, sum(selected_costs)))
 
-# Format the help display ("\b" enables newlines in click() help text)
-root_dir = os.path.dirname(os.path.abspath(__file__))
-datafiles = os.listdir(os.path.join(root_dir, "data"))
-datafile_help = """
-Name of data file (under the 'data/' folder) to run on. One of:\n
-File Name \t\t Total weight\n
+def datafile_help(max_files=5):
+    """Provide content of input file names and total weights for click()'s --help."""
+
+    try:
+        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+        datafiles = os.listdir(data_dir)
+        # "\b" enables newlines in click() help text
+        help = """
 \b
+Name of data file (under the 'data/' folder) to run on.
+One of:
+File Name \t Total weight
 """
-for file in datafiles:
-    df = pd.read_csv("data/" + file, names=['cost', 'weight'])
-    datafile_help += str(file) + "\t\t" + str(sum(df['weight'])) + "\n"
-datafile_help += "\nDefault is to run on data/large.csv."
+        for file in datafiles[:max_files]:
+            df = pd.read_csv(os.path.join(data_dir, file), names=['cost', 'weight'])
+            help += "{:<20} {:<10} \n".format(str(file), str(sum(df['weight'])))
+        help += "\nDefault is to run on data/large.csv."
+    except:
+        help = """
+\b
+Name of data file (under the 'data/' folder) to run on.
+Default is to run on data/large.csv.
+"""
+
+    return help
+
+filename_help = datafile_help()     # Format the help string for the --filename argument
 
 @click.command()
 @click.option('--filename', type=click.File(), default='data/large.csv',
-              help=datafile_help)
+              help=filename_help)
 @click.option('--capacity', default=None,
               help="Maximum weight for the container. By default sets to 80% of the total.")
 def main(filename, capacity):
