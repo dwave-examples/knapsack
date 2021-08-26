@@ -100,7 +100,8 @@ def parse_solution(sampleset, costs, weights):
     print("\nSelected item costs: {}, total = {}".format(selected_costs, sum(selected_costs)))
 
 # Format the help display ("\b" enables newlines in click() help text)
-datafiles = os.listdir("data")
+root_dir = os.path.dirname(os.path.abspath(__file__))
+datafiles = os.listdir(os.path.join(root_dir, "data"))
 datafile_help = """
 Name of data file (under the 'data/' folder) to run on. One of:\n
 File Name \t\t Total weight\n
