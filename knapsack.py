@@ -113,8 +113,8 @@ One of:
 File Name \t Total weight
 """
         for file in datafiles[:max_files]:
-            df = pd.read_csv(os.path.join(data_dir, file), names=['cost', 'weight'])
-            help += "{:<20} {:<10} \n".format(str(file), str(sum(df['weight'])))
+            _, weights, _ = parse_inputs(os.path.join(data_dir, file), 1234)
+            help += "{:<20} {:<10} \n".format(str(file), str(sum(weights)))
         help += "\nDefault is to run on data/large.csv."
     except:
         help = """
