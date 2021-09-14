@@ -50,7 +50,8 @@ The code in `knapsack.py` includes three main functions:
     unselected items.
   - Constraint: A quadratic model with the previously created binary variables,
     where the linear biases are set equal to the weight of each item, is created
-    with the requirement that the total weight no exceed the container's capacity.
+    with the requirement that the total weight must not exceed the container's
+    capacity.
 * `parse_inputs()` is a utility function that reads data from the example files.
 * `parse_solution()` parses and displays the results returned from the solver.
 
