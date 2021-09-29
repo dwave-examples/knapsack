@@ -84,7 +84,7 @@ def parse_solution(sampleset, costs, weights):
         weights (array-like):
             Array of weights for the items.
     """
-    feasible_sampleset = filter(sampleset, lambda row: row.is_feasible)
+    feasible_sampleset = sampleset.filter(lambda row: row.is_feasible)
 
     if not len(feasible_sampleset):
         raise ValueError("No feasible solution found")
