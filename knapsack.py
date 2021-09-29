@@ -84,11 +84,12 @@ def parse_solution(sampleset, costs, weights):
         weights (array-like):
             Array of weights for the items.
     """
-    if not any(sampleset.record["is_feasible"]):
+    feasible_sampleset = filter(sampleset, lambda row: row.is_feasible)
+
+    if not len(feasible_sampleset):
         raise ValueError("No feasible solution found")
 
-    best = next(itertools.filterfalse(lambda d: not getattr(d,'is_feasible'),
-                list(sampleset.data())))
+    best = feasible_sampleset.first
 
     selected_item_indices = [key for key, val in best.sample.items() if val==1.0]
     selected_weights = list(weights.loc[selected_item_indices])
