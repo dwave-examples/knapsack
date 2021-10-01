@@ -1,8 +1,4 @@
-dwave-ocean-sdk>=3.4.1    # Placeholder latest version
-internal dimod            # For testing CQM; need to pip install on its own
-dwave-system==1.7.0       # For testing CQM; need to pip install on its own
-# TODO: All the above to be replaced by the updated SDK version number in first line
-
+dwave-ocean-sdk>=4.1
 pandas==1.2.1; python_version>='3.6.1'
 pandas==0.25.3; python_version<'3.6.1'
 click
