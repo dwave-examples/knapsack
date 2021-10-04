@@ -1,4 +1,4 @@
-# Copyright 2020 D-Wave Systems Inc.
+# Copyright 2021 D-Wave Systems Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,76 +12,76 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import subprocess
 import sys
 import unittest
-import pandas as pd
-import re
-import ast
+import subprocess
+from io import StringIO
+from contextlib import redirect_stdout
+import numpy as np
+from dimod import SampleSet, append_data_vectors
+from knapsack import build_knapsack_cqm, parse_inputs, parse_solution
 
-import dimod
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Add the parent path so that the test file can be run as a script in
-# addition to using "python -m unittest" from the root directory
-example_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(example_dir)
-import knapsack
+def redirect_output(sampleset, costs, weights):
+    with redirect_stdout(StringIO()) as f:
+        parse_solution(sampleset, costs, weights)
+    return f.getvalue()
 
+class TestBuildCQM(unittest.TestCase):
+    """Verify correct construction of CQM for very_small.csv data with weight 10."""
+    def test_build_cqm1(self):
+        cqm = build_knapsack_cqm([10, 1], [5, 7], 10)
+        self.assertEqual(cqm.objective.linear, {0: -10.0, 1: -1.0})
+        self.assertEqual(cqm.constraints["capacity"].lhs.linear, {0: 5.0, 1: 7.0})
+        self.assertEqual(cqm.constraints["capacity"].rhs, 10)
 
-class TestExactSolver(unittest.TestCase):
-    """Test problems using the exact solver"""
+class TestParsing(unittest.TestCase):
+    """Verify input and output handling."""
+    def test_parse_input1(self):
+        file1 = os.path.join(root_dir, "data", "small.csv")
+        costs, weights, capacity = parse_inputs(file1, 10)
 
-    def _exact_solver_driver(self, data_file, max_weight, expected_energy, expected_item_indices):
-        """Utility routine to perform a test on the exact solver and compare to expected solution"""
-        sampler = dimod.ExactSolver()
+        self.assertEqual(capacity, 10)
+        self.assertEqual(sum(costs), 405)
+        self.assertEqual(sum(weights), 112)
 
-        df = pd.read_csv(data_file, names=['cost', 'weight'])
+    def test_parse_ouput1(self):
+        file1 = os.path.join(root_dir, "data", "small.csv")
+        costs, weights, capacity = parse_inputs(file1, 10)
+        samples = np.asarray([[1., 0., 1., 0., 0., 1., 0.], [0., 0., 0., 0., 0., 1., 0.],
+                               [0., 1., 0., 0., 0., 1., 0.], [0., 0., 1., 0., 0., 1., 0.]])
+        sampleset = SampleSet.from_samples(samples, 'BINARY', [-10, -11, -8, -9])
+        sampleset_infeasible = append_data_vectors(sampleset, is_feasible=[False]*4)
 
-        selected_item_indices, energy = knapsack.solve_knapsack(df['cost'], df['weight'], max_weight, sampler=sampler)
+        # Verify error for infeasible constraint input
+        with self.assertRaises(ValueError):
+            s = redirect_output(sampleset_infeasible, costs, weights)
 
-        self.assertEqual(energy, expected_energy)
-        self.assertEqual(selected_item_indices, expected_item_indices)
-        
-    def test_small_problem(self):
-        """Test the small.csv problem"""
-        data_file_name = os.path.join(example_dir, 'data/small.csv')
-        self._exact_solver_driver(data_file_name, 50, -205, [4, 5, 6])
+        sampleset_feasible = append_data_vectors(sampleset,
+                                        is_feasible=[False, True, False, True])
+        s = redirect_output(sampleset_feasible, costs, weights)
+        self.assertIn('Found best solution at energy -11', s)
+        self.assertIn('Selected item numbers (0-indexed): [5]', s)
+        self.assertIn('Selected item weights: [10]', s)
+        self.assertIn('Selected item costs: [80]', s)
 
-    def test_very_small_problem(self):
-        """Test the very_small.csv problem"""
-        data_file_name = os.path.join(example_dir, 'data/very_small.csv')
-        self._exact_solver_driver(data_file_name, 10, -10, [0])
+class TestIntegration(unittest.TestCase):
+    @unittest.skipIf(os.getenv('SKIP_INT_TESTS'), "Skipping integration test.")
+    def test_integration(self):
+        """Test integration of demo script."""
 
+        project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        demo_file = os.path.join(project_dir, 'knapsack.py')
 
-class IntegrationTest(unittest.TestCase):
-    """Test the main program run as a script using the small.csv data"""
+        output = subprocess.check_output([sys.executable, demo_file])
+        output = output.decode('utf-8') # Bytes to str
+        output = output.lower()
 
-    @classmethod
-    def setUpClass(cls):
-        """Utility method that runs the problem and stores the output"""
-        
-        file_path = os.path.join(example_dir, 'knapsack.py')
-        data_file_path = os.path.join(example_dir, 'data/small.csv')
-        test_case_weight = '50'
-
-        cls.output = subprocess.check_output([sys.executable, file_path,
-                                              data_file_path, test_case_weight])
-        cls.output = cls.output.decode('utf-8') # Bytes to str
-
-    def test_smoke(self):
-        """Verify that the executable script runs and reports some solution"""
-
-        self.assertIn("found solution", self.output.lower())
-
-    def test_solution(self):
-        """Verify that the expected solution is obtained"""
-
-        energy = int(float(re.search(r'energy\s+([+-]?\d+(\.\d*)?)', self.output, re.I).group(1)))
-        item_indices = re.search(r'item numbers.*:\s*(\[[^]]*\])', self.output, re.I).group(1)
-        # Note: item indices in the output are sorted
-        self.assertEqual(ast.literal_eval(item_indices), [4, 5, 6])
-        self.assertEqual(energy, -205)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        self.assertIn('building a cqm', output)
+        self.assertIn('submitting cqm to solver', output)
+        self.assertIn('found best solution', output)
+        self.assertIn('selected item numbers', output)
+        self.assertIn('selected item weights', output)
+        self.assertIn('selected item costs', output)
+        self.assertNotIn('traceback', output)

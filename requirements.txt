@@ -1,3 +1,4 @@
-dwave-ocean-sdk>=3.3.0
+dwave-ocean-sdk>=4.1
 pandas==1.2.1; python_version>='3.6.1'
 pandas==0.25.3; python_version<'3.6.1'
+click
